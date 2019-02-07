@@ -1,4 +1,6 @@
-﻿using Microsoft.VisualStudio.Services.Common;
+﻿using adoProcess.Helper.ConsoleTable;
+using Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models;
+using Microsoft.VisualStudio.Services.Common;
 using Microsoft.VisualStudio.Services.WebApi;
 using System;
 using System.Collections.Generic;
@@ -29,18 +31,86 @@ namespace adoProcess
                 VssCredentials clientCredentials = new VssCredentials(new VssBasicCredential("username", pat));
                 VssConnection vssConnection = new VssConnection(baseUri, clientCredentials);
 
-                if (list == "all" && String.IsNullOrEmpty(refname))
+                //list out all fields
+                if (list == "all")
                 {
-                    WorkItemTracking.Fields.GetAllFields(vssConnection);
+                    var fields = WorkItemTracking.Fields.GetAllFields(vssConnection);
+
+                    var table = new ConsoleTable("Name", "Reference Name", "Type");
+
+                    foreach (WorkItemField field in fields)
+                    {
+                        table.AddRow(field.Name, field.ReferenceName, field.Type);
+                    }
+
+                    table.Write();
+                    Console.WriteLine();
 
                     return 0;
                 }
 
+                //get one field by refname
                 if (list == "one" && (! String.IsNullOrEmpty(refname)))
                 {
-                    WorkItemTracking.Fields.GetField(vssConnection, refname);
+                    var field = WorkItemTracking.Fields.GetField(vssConnection, refname);
 
-                    return 0;
+                    if (field != null)
+                    {
+                        var table = new ConsoleTable("Name", "Reference Name", "Type");
+
+                        table.AddRow(field.Name, field.ReferenceName, field.Type);
+
+                        table.Write();
+                        Console.WriteLine();
+
+                        return 0;
+                    }
+                    else
+                    {
+                        Console.WriteLine("Field '" + refname + "' not found");
+                        return 0;
+                    }                   
+                }
+
+                //add new field to the organization
+                if (! ((string.IsNullOrEmpty(refname)) && string.IsNullOrEmpty(name) && string.IsNullOrEmpty(type)) )
+                {
+                    //check to see if the type is a legit type
+                    int pos = Array.IndexOf(WorkItemTracking.Fields.Types, type);
+
+                    if (pos == -1)
+                    {
+                        var types = WorkItemTracking.Fields.Types;
+
+                        Console.WriteLine("Invalid field type value '" + type + "'");
+                        Console.WriteLine();
+                        Console.WriteLine("Valid field types are:");
+                        Console.WriteLine();
+
+                        foreach (string item in types)
+                        {
+                            Console.WriteLine(item);
+                        }
+
+                        return 0;
+                    }
+
+                    //check and make sure the field does not yet exist
+                    var field = WorkItemTracking.Fields.GetField(vssConnection, refname);
+
+                    if (field != null)
+                    {
+                        Console.WriteLine("Field '" + refname + "' already exists");
+                        Console.WriteLine();
+
+                        var table = new ConsoleTable("Name", "Reference Name", "Type");
+
+                        table.AddRow(field.Name, field.ReferenceName, field.Type);
+
+                        table.Write();
+                        Console.WriteLine();
+                        return 0;
+                    }
                 }
 
                 vssConnection = null;
@@ -50,7 +120,6 @@ namespace adoProcess
                 Console.WriteLine(ex.Message);
 
                 ShowUsage();
-
                 return -1;
             }
 
@@ -107,12 +176,7 @@ namespace adoProcess
             if (org == null || pat == null)
             {
                 throw new ArgumentException("Missing required arguments");
-            }
-
-            if ((list == null) && (refname != null || name != null || type != null))
-            {
-                throw new ArgumentException("List only works with connectionurl argument");
-            }
+            }            
         }
 
         private static void ShowUsage()
