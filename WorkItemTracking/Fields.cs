@@ -13,7 +13,7 @@ namespace adoProcess.WorkItemTracking
 {
     public static class Fields
     {   
-        private readonly static string[] _fieldTypes = new string[] { "boolean", "dateTime", "double", "html", "identity", "integer", "picklistDouble", "picklistInteger", "picklistString", "plainText", "string" };
+        private readonly static string[] _fieldTypes = new string[] { "boolean", "dateTime", "double", "html", "identity", "integer", "pickactionDouble", "pickactionInteger", "pickactionString", "plainText", "string" };
 
         public static List<WorkItemField> GetAllFields(VssConnection connection)
         {            
@@ -87,13 +87,13 @@ namespace adoProcess.WorkItemTracking
                 case "plainText":
                     fieldType = Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models.FieldType.PlainText;
                     break;
-                case "picklistDouble":
+                case "pickactionDouble":
                     fieldType = Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models.FieldType.PicklistDouble;
                     break;
-                case "picklistInteger":
+                case "pickactionInteger":
                     fieldType = Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models.FieldType.PicklistInteger;
                     break;
-               case "picklistString":
+               case "pickactionString":
                     fieldType = Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models.FieldType.PicklistString;
                     break;
                 default:

@@ -20,19 +20,19 @@ namespace adoProcess
                 return 0;
             }
 
-            string org, pat, project, refname, name, type, list;
+            string org, pat, project, refname, name, type, action;
 
             try
             {
-                CheckArguments(args, out org, out pat, out project, out refname, out name, out type, out list);
+                CheckArguments(args, out org, out pat, out project, out refname, out name, out type, out action);
 
                 Uri baseUri = new Uri(org);
 
                 VssCredentials clientCredentials = new VssCredentials(new VssBasicCredential("username", pat));
                 VssConnection vssConnection = new VssConnection(baseUri, clientCredentials);
 
-                //list out all fields
-                if (list == "all")
+                //action out all fields
+                if (action == "listallfields")
                 {
                     var fields = WorkItemTracking.Fields.GetAllFields(vssConnection);
 
@@ -50,7 +50,7 @@ namespace adoProcess
                 }
 
                 //get one field by refname
-                if (list == "one" && (! String.IsNullOrEmpty(refname)))
+                if (action == "getfield" && (! String.IsNullOrEmpty(refname)))
                 {
                     var field = WorkItemTracking.Fields.GetField(vssConnection, refname);
 
@@ -73,7 +73,7 @@ namespace adoProcess
                 }
 
                 //add new field to the organization
-                if (! ((string.IsNullOrEmpty(refname)) && string.IsNullOrEmpty(name) && string.IsNullOrEmpty(type)) )
+                if (action == "addfield")
                 {
                     //check to see if the type is a legit type
                     int pos = Array.IndexOf(WorkItemTracking.Fields.Types, type);
@@ -100,7 +100,7 @@ namespace adoProcess
 
                     if (field != null)
                     {
-                        Console.WriteLine("Field '" + refname + "' already exists");
+                        Console.WriteLine("Field already exists");
                         Console.WriteLine();
 
                         var table = new ConsoleTable("Name", "Reference Name", "Type");
@@ -109,7 +109,15 @@ namespace adoProcess
 
                         table.Write();
                         Console.WriteLine();
+
                         return 0;
+                    }
+                                       
+                    WorkItemField newField = WorkItemTracking.Fields.AddField(vssConnection, refname, name, type);
+
+                    if (newField != null)
+                    {
+                        Console.WriteLine("Field '" + refname + "' was successfully added");
                     }
                 }
 
@@ -126,13 +134,13 @@ namespace adoProcess
             return 0;
         }
 
-        private static void CheckArguments(string[] args, out string org, out string pat, out string project, out string refname, out string name, out string type, out string list)
+        private static void CheckArguments(string[] args, out string org, out string pat, out string project, out string refname, out string name, out string type, out string action)
         {
             org = null;
             refname = null;
             name = null;
             type = null;
-            list = null;
+            action = null;
             project = null;
             pat = null;
 
@@ -164,8 +172,8 @@ namespace adoProcess
                         case "type":
                             type = value;
                             break;
-                        case "list":
-                            list = value;
+                        case "action":
+                            action = value;
                             break;
                         default:
                             throw new ArgumentException("Unknown argument", key);
@@ -176,7 +184,17 @@ namespace adoProcess
             if (org == null || pat == null)
             {
                 throw new ArgumentException("Missing required arguments");
-            }            
+            }
+            
+            if ((action == "getfield") && string.IsNullOrEmpty(refname))
+            {
+                throw new ArgumentException("getfield action requires refname value");
+            }
+
+            if ((action == "addfield") && (string.IsNullOrEmpty(refname) || string.IsNullOrEmpty(name) || string.IsNullOrEmpty(type)))
+            {
+                throw new ArgumentException("addfield action requires refname, name, and type value");
+            }
         }
 
         private static void ShowUsage()
@@ -185,16 +203,19 @@ namespace adoProcess
             Console.WriteLine("");
             Console.WriteLine("Arguments:");
             Console.WriteLine("");
-            Console.WriteLine("  /org:{value}                                       URL of the account/collection to run the samples against.");
-            Console.WriteLine("  /pat:{value}                                       personal access token");
+            Console.WriteLine("  /org:{value}           azure devops organization name");
+            Console.WriteLine("  /pat:{value}           personal access token");
             Console.WriteLine("");
-            Console.WriteLine("  /refname:{value} /name:{value} /type:{value}       creates a new field");           
-            Console.WriteLine("  /list:all                                          print out all fields");
-            Console.WriteLine("  /list:one  /refname:{value}                        print field information for refname");
+            Console.WriteLine("  /action:               listallfields, getfield, addfield");
+            Console.WriteLine("  /refname:{value}       refname of field getting or adding");
+            Console.WriteLine("  /name:{value}          field friendly name");
+            Console.WriteLine("  /type:{value}          type field creating");             
+          
             Console.WriteLine("");
             Console.WriteLine("Examples:");
             Console.WriteLine("");
-            Console.WriteLine("  /org:fabrikam /pat:{value} /list:all");
+            Console.WriteLine("  /org:fabrikam /pat:{value} /action:listallfields");
+            Console.WriteLine("  /org:fabrikam /pat:{value} /action:getfield /refname:System.Title");
 
             Console.WriteLine("");
         }
