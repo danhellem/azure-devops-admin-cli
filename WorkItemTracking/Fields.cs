@@ -24,6 +24,40 @@ namespace adoProcess.WorkItemTracking
             return fields;               
         }
 
+        public static List<WorkItemField> SearchFields(VssConnection connection, string name = null, string type = null)
+        {            
+            WorkItemTrackingHttpClient workItemTrackingClient = connection.GetClient<WorkItemTrackingHttpClient>();
+
+            List<WorkItemField> fields = workItemTrackingClient.GetFieldsAsync().Result;
+            List<WorkItemField> results = new List<WorkItemField>();
+
+            if (! string.IsNullOrEmpty(name))
+            {
+                foreach(var field in fields)
+                {
+                    if (field.Name.ToLower().Contains(name.ToLower()))
+                    {
+                        results.Add(field);
+                    }
+                }
+            }  
+            
+            if (! string.IsNullOrEmpty(type))
+            {
+                var fieldType = SetFieldType(type);
+
+                foreach (var field in fields)
+                {
+                    if (field.Type == fieldType)
+                    {
+                        results.Add(field);
+                    }
+                }
+            }  
+
+            return results;           
+        }
+
         public static WorkItemField GetField(VssConnection connection, string refname)
         {
             WorkItemTrackingHttpClient client = connection.GetClient<WorkItemTrackingHttpClient>();
