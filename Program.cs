@@ -72,6 +72,30 @@ namespace adoProcess
                     }                   
                 }
 
+                if (action == "searchfields")
+                {
+                    var fields = WorkItemTracking.Fields.SearchFields(vssConnection, name, type);
+
+                    if (fields.Count == 0)
+                    {
+                        Console.WriteLine("No fields found for name: '" + name + "' or type: '" + type + "'");
+                        return 0;
+                    }
+
+                    var table = new ConsoleTable("Name", "Reference Name", "Type");
+
+                    foreach (WorkItemField field in fields)
+                    {
+                        table.AddRow(field.Name, field.ReferenceName, field.Type);
+                    }
+
+                    table.Write();
+                    Console.WriteLine();
+
+                    return 0;
+
+                }               
+
                 //add new field to the organization
                 if (action == "addfield")
                 {
@@ -195,6 +219,11 @@ namespace adoProcess
             {
                 throw new ArgumentException("addfield action requires refname, name, and type value");
             }
+
+            if ((action == "searchfield" && string.IsNullOrEmpty(name) && string.IsNullOrEmpty(name)))
+            {
+                 throw new ArgumentException("searchfield action requires name or type value");
+            }           
         }
 
         private static void ShowUsage()
