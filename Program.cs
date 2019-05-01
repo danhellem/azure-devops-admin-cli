@@ -20,11 +20,11 @@ namespace adoProcess
                 return 0;
             }
 
-            string org, pat, project, refname, name, type, action;
+            string org, pat, project, refname, name, type, action, processid;
 
             try
             {
-                CheckArguments(args, out org, out pat, out project, out refname, out name, out type, out action);
+                CheckArguments(args, out org, out pat, out project, out refname, out name, out type, out action, out processid);
 
                 Uri baseUri = new Uri(org);
 
@@ -62,6 +62,16 @@ namespace adoProcess
 
                         table.Write();
                         Console.WriteLine();
+
+                        if (! String.IsNullOrEmpty(processid))
+                        {
+                            List<string> list = WorkItemTracking.Fields.GetWorkItemTypesForField(vssConnection, new System.Guid(processid), refname);
+
+                            foreach (string item in list)
+                            {
+                                Console.WriteLine(item);
+                            }
+                        }
 
                         return 0;
                     }
@@ -158,7 +168,7 @@ namespace adoProcess
             return 0;
         }
 
-        private static void CheckArguments(string[] args, out string org, out string pat, out string project, out string refname, out string name, out string type, out string action)
+        private static void CheckArguments(string[] args, out string org, out string pat, out string project, out string refname, out string name, out string type, out string action, out string processid)
         {
             org = null;
             refname = null;
@@ -167,6 +177,7 @@ namespace adoProcess
             action = null;
             project = null;
             pat = null;
+            processid = null;
 
             Dictionary<string, string> argsMap = new Dictionary<string, string>();
             foreach (var arg in args)
@@ -198,6 +209,9 @@ namespace adoProcess
                             break;
                         case "action":
                             action = value;
+                            break;
+                        case "processid":
+                            processid = value;
                             break;
                         default:
                             throw new ArgumentException("Unknown argument", key);
@@ -238,13 +252,15 @@ namespace adoProcess
             Console.WriteLine("  /action:               listallfields, getfield, addfield");
             Console.WriteLine("  /refname:{value}       refname of field getting or adding");
             Console.WriteLine("  /name:{value}          field friendly name");
-            Console.WriteLine("  /type:{value}          type field creating");             
-          
+            Console.WriteLine("  /type:{value}          type field creating");
+            Console.WriteLine("  /processid:{value}     process id");
+
+
             Console.WriteLine("");
             Console.WriteLine("Examples:");
             Console.WriteLine("");
             Console.WriteLine("  /org:fabrikam /pat:{value} /action:listallfields");
-            Console.WriteLine("  /org:fabrikam /pat:{value} /action:getfield /refname:System.Title");
+            Console.WriteLine("  /org:fabrikam /pat:{value} /action:getfield /refname:System.Title /processid: F909F15D-F51D-40EA-BDA4-322DCE13D90F");
 
             Console.WriteLine("");
         }

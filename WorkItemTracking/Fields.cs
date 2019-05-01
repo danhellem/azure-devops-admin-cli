@@ -73,6 +73,34 @@ namespace adoProcess.WorkItemTracking
                 return null;
             }          
         }
+        
+        public static List<string> GetWorkItemTypesForField(VssConnection connection, Guid processId, string fieldRefName)
+        {
+            WorkItemTrackingProcessHttpClient client = connection.GetClient<WorkItemTrackingProcessHttpClient>();
+            List<string> workItemTypes = new List<string>();
+
+            try
+            {
+                List<ProcessWorkItemType> list = client.GetProcessWorkItemTypesAsync(processId).Result;
+                ProcessWorkItemTypeField field;
+
+                foreach (var item in list)
+                {
+                    field = client.GetWorkItemTypeFieldAsync(processId, item.ReferenceName, fieldRefName).Result;
+
+                    if (field != null)
+                    {   
+                        workItemTypes.Add(item.Name);
+                    }
+                }
+
+                return workItemTypes;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
 
         public static WorkItemField AddField(VssConnection connection, string refname, string name, string type)
         {
