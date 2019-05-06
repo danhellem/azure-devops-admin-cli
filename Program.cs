@@ -54,30 +54,61 @@ namespace adoProcess
                 //get one field by refname
                 if (action == "getfield" && (! String.IsNullOrEmpty(refname)))
                 {
-                    List<ProcessInfo> processList = Process.Process.GetProcesses(vssConnection);
-                    List<ProcessWorkItemType> witList;                    
 
-                    var table = new ConsoleTable("Process", "Work Item Type", "Field Name", "Field Reference Name");
+                    //List<ProcessInfo> processList = Process.Process.GetProcesses(vssConnection);
+                    //List<ProcessWorkItemType> witList;                    
 
-                    foreach (var processInfo in processList)
+                    //var table = new ConsoleTable("Process", "Work Item Type", "Field Name", "Field Reference Name");
+
+                    //foreach (var processInfo in processList)
+                    //{
+                    //    witList = Process.Process.GetWorkItemTypes(vssConnection, processInfo.TypeId);
+
+                    //    foreach(var wit in witList)
+                    //    {
+                    //        ProcessWorkItemTypeField witField = Process.Process.GetField(vssConnection, processInfo.TypeId, wit.ReferenceName, refname);
+
+                    //        if (witField != null)
+                    //        {
+                    //            table.AddRow(processInfo.Name, wit.Name, witField.Name, witField.ReferenceName);                             
+                    //        }
+
+                    //        witField = null;
+                    //    }
+                    //}
+
+                    //table.Write();
+                    //Console.WriteLine();                                      
+                }
+
+                if (action == "getfieldforproject" && (!String.IsNullOrEmpty(refname) && !String.IsNullOrEmpty(project)))
+                {
+                    Console.WriteLine("Getting list of work item types in the project and looking for field...");
+                    Console.WriteLine();
+
+                    var table = new ConsoleTable("Project", "Work Item Type", "Field Reference Name", "Field Name");
+                    WorkItemTypeFieldWithReferences field;
+
+                    List<WorkItemType> list = WorkItemTracking.WorkItemTypes.GetWorkItemTypesForProject(vssConnection, project);
+
+                    foreach(var item in list)
                     {
-                        witList = Process.Process.GetWorkItemTypes(vssConnection, processInfo.TypeId);
+                        field = WorkItemTracking.Fields.GetFieldForWorkItemType(vssConnection, project, item.ReferenceName, refname);
 
-                        foreach(var wit in witList)
+                        if (field != null)
                         {
-                            ProcessWorkItemTypeField witField = Process.Process.GetField(vssConnection, processInfo.TypeId, wit.ReferenceName, refname);
-
-                            if (witField != null)
-                            {
-                                table.AddRow(processInfo.Name, wit.Name, witField.Name, witField.ReferenceName);                             
-                            }
-
-                            witField = null;
+                            table.AddRow(project, item.ReferenceName, field.ReferenceName, field.Name);                           
                         }
+
+                        field = null;
                     }
 
                     table.Write();
-                    Console.WriteLine();                                      
+                    Console.WriteLine();
+
+                    field = null;
+                    table = null;
+                    list = null;
                 }
 
                 if (action == "searchfields")
@@ -246,6 +277,11 @@ namespace adoProcess
             if ((action == "getfield") && string.IsNullOrEmpty(refname))
             {
                 throw new ArgumentException("getfield action requires refname value");
+            }
+
+            if ((action == "getfieldforproject") && string.IsNullOrEmpty(refname) && string.IsNullOrEmpty(project))
+            {
+                throw new ArgumentException("getfieldforproject action requires field refname value and project name");
             }
 
             if ((action == "addfield") && (string.IsNullOrEmpty(refname) || string.IsNullOrEmpty(name) || string.IsNullOrEmpty(type)))
