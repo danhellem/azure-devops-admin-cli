@@ -1,5 +1,6 @@
 ﻿using adoProcess.Helper;
 using adoProcess.Helper.ConsoleTable;
+using adoProcess.ViewModels;
 using Microsoft.TeamFoundation.WorkItemTracking.Process.WebApi;
 using Microsoft.TeamFoundation.WorkItemTracking.Process.WebApi.Models;
 using Microsoft.TeamFoundation.WorkItemTracking.WebApi;
@@ -89,6 +90,44 @@ namespace adoProcess.WorkItemTracking
             var result = client.CreateFieldAsync(workItemField).Result;
 
             return result;
+        }
+
+        public static List<FieldsPerProcess> ListFieldsForProcess(VssConnection connection, string process)
+        {
+            WorkItemTrackingProcessHttpClient client = connection.GetClient<WorkItemTrackingProcessHttpClient>();
+            List<FieldsPerProcess> list = new List<FieldsPerProcess>();
+
+            //get the process by name
+            List<ProcessInfo> listProcess = client.GetListOfProcessesAsync().Result;
+
+            ProcessInfo processInfo = listProcess.Find(x => x.Name == process);
+
+            //if processInfo is null then just return null
+            if (processInfo == null)
+            {
+                return null;
+            }
+
+            //get list of work item types per the processid           
+            List<ProcessWorkItemType> listWorkItemTypes = client.GetProcessWorkItemTypesAsync(processInfo.TypeId).Result;
+           
+            //loop thru each wit and get the list of fields
+            //add to viewmodel object and return that
+            foreach(ProcessWorkItemType wit in listWorkItemTypes)
+            {
+                List<ProcessWorkItemTypeField> listFields = client.GetAllWorkItemTypeFieldsAsync(processInfo.TypeId, wit.ReferenceName).Result;
+                
+                if (listFields.Count > 0) 
+                {
+                    list.Add(new FieldsPerProcess() { workItemType = wit, fields = listFields });
+                }
+                else
+                {
+                    list.Add(null);
+                }
+            }
+
+            return list;
         }
 
         public static Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models.FieldType SetFieldType(string type)

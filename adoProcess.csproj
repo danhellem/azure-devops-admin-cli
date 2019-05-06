@@ -114,6 +114,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Helper\ConsoleTable.cs" />
+    <Compile Include="ViewModels\FieldsPerProcess.cs" />
     <Compile Include="WorkItemTracking\Fields.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

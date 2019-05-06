@@ -1,4 +1,6 @@
 ﻿using adoProcess.Helper.ConsoleTable;
+using adoProcess.ViewModels;
+using Microsoft.TeamFoundation.WorkItemTracking.Process.WebApi.Models;
 using Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models;
 using Microsoft.VisualStudio.Services.Common;
 using Microsoft.VisualStudio.Services.WebApi;
@@ -20,11 +22,11 @@ namespace adoProcess
                 return 0;
             }
 
-            string org, pat, project, refname, name, type, action;
+            string org, pat, process, project, refname, name, type, action;
 
             try
             {
-                CheckArguments(args, out org, out pat, out project, out refname, out name, out type, out action);
+                CheckArguments(args, out org, out pat, out project, out refname, out name, out type, out action, out process);
 
                 Uri baseUri = new Uri(org);
 
@@ -93,7 +95,6 @@ namespace adoProcess
                     Console.WriteLine();
 
                     return 0;
-
                 }               
 
                 //add new field to the organization
@@ -145,6 +146,28 @@ namespace adoProcess
                     }
                 }
 
+                if (action == "listfieldsforprocess")
+                {
+                    List<FieldsPerProcess> list = WorkItemTracking.Fields.ListFieldsForProcess(vssConnection, process);
+
+                    var table = new ConsoleTable("Work Item Type", "Name", "Reference Name", "Type");
+
+                    foreach (FieldsPerProcess item in list)
+                    {
+                        List<ProcessWorkItemTypeField> fields = item.fields;
+
+                        foreach(ProcessWorkItemTypeField field in fields)
+                        {
+                            table.AddRow(item.workItemType.Name, field.Name, field.ReferenceName, field.Type);
+                        }                      
+                    }
+
+                    table.Write();
+                    Console.WriteLine();
+
+                    return 0;
+                }
+
                 vssConnection = null;
             }
             catch (ArgumentException ex)
@@ -158,7 +181,7 @@ namespace adoProcess
             return 0;
         }
 
-        private static void CheckArguments(string[] args, out string org, out string pat, out string project, out string refname, out string name, out string type, out string action)
+        private static void CheckArguments(string[] args, out string org, out string pat, out string project, out string refname, out string name, out string type, out string action, out string process)
         {
             org = null;
             refname = null;
@@ -167,6 +190,7 @@ namespace adoProcess
             action = null;
             project = null;
             pat = null;
+            process = null;
 
             Dictionary<string, string> argsMap = new Dictionary<string, string>();
             foreach (var arg in args)
@@ -199,6 +223,9 @@ namespace adoProcess
                         case "action":
                             action = value;
                             break;
+                        case "process":
+                            process = value;
+                            break;
                         default:
                             throw new ArgumentException("Unknown argument", key);
                     }
@@ -220,10 +247,15 @@ namespace adoProcess
                 throw new ArgumentException("addfield action requires refname, name, and type value");
             }
 
-            if ((action == "searchfield" && string.IsNullOrEmpty(name) && string.IsNullOrEmpty(name)))
+            if ((action == "searchfield" && string.IsNullOrEmpty(name) && string.IsNullOrEmpty(refname)))
             {
                  throw new ArgumentException("searchfield action requires name or type value");
-            }           
+            }    
+            
+            if (action == "listfieldsforprocess" && string.IsNullOrEmpty(process))
+            {
+                throw new ArgumentException("listfieldsforprocess action requires process");
+            }
         }
 
         private static void ShowUsage()
@@ -235,9 +267,10 @@ namespace adoProcess
             Console.WriteLine("  /org:{value}           azure devops organization name");
             Console.WriteLine("  /pat:{value}           personal access token");
             Console.WriteLine("");
-            Console.WriteLine("  /action:               listallfields, getfield, addfield");
+            Console.WriteLine("  /action:               listallfields, getfield, addfield, searchfield, listfieldsforprocess");
             Console.WriteLine("  /refname:{value}       refname of field getting or adding");
             Console.WriteLine("  /name:{value}          field friendly name");
+            Console.WriteLine("  /process:{value}       name of process");
             Console.WriteLine("  /type:{value}          type field creating");             
           
             Console.WriteLine("");
@@ -245,6 +278,7 @@ namespace adoProcess
             Console.WriteLine("");
             Console.WriteLine("  /org:fabrikam /pat:{value} /action:listallfields");
             Console.WriteLine("  /org:fabrikam /pat:{value} /action:getfield /refname:System.Title");
+            Console.WriteLine("  /org:fabrikam /pat:{value} /action:listfieldsforprocess /process:Agile");
 
             Console.WriteLine("");
         }
