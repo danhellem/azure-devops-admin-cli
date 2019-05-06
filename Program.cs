@@ -54,24 +54,30 @@ namespace adoProcess
                 //get one field by refname
                 if (action == "getfield" && (! String.IsNullOrEmpty(refname)))
                 {
-                    var field = WorkItemTracking.Fields.GetField(vssConnection, refname);
+                    List<ProcessInfo> processList = Process.Process.GetProcesses(vssConnection);
+                    List<ProcessWorkItemType> witList;                    
 
-                    if (field != null)
+                    var table = new ConsoleTable("Process", "Work Item Type", "Field Name", "Field Reference Name");
+
+                    foreach (var processInfo in processList)
                     {
-                        var table = new ConsoleTable("Name", "Reference Name", "Type");
+                        witList = Process.Process.GetWorkItemTypes(vssConnection, processInfo.TypeId);
 
-                        table.AddRow(field.Name, field.ReferenceName, field.Type);
+                        foreach(var wit in witList)
+                        {
+                            ProcessWorkItemTypeField witField = Process.Process.GetField(vssConnection, processInfo.TypeId, wit.ReferenceName, refname);
 
-                        table.Write();
-                        Console.WriteLine();
+                            if (witField != null)
+                            {
+                                table.AddRow(processInfo.Name, wit.Name, witField.Name, witField.ReferenceName);                             
+                            }
 
-                        return 0;
+                            witField = null;
+                        }
                     }
-                    else
-                    {
-                        Console.WriteLine("Field '" + refname + "' not found");
-                        return 0;
-                    }                   
+
+                    table.Write();
+                    Console.WriteLine();                                      
                 }
 
                 if (action == "searchfields")

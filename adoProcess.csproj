@@ -114,6 +114,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Helper\ConsoleTable.cs" />
+    <Compile Include="Process\Process.cs" />
     <Compile Include="ViewModels\FieldsPerProcess.cs" />
     <Compile Include="WorkItemTracking\Fields.cs" />
     <Compile Include="Program.cs" />
@@ -123,8 +124,6 @@
     <None Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Process\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
