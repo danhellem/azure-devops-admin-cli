@@ -1,4 +1,6 @@
 ﻿using adoProcess.Helper.ConsoleTable;
+using adoProcess.ViewModels;
+using Microsoft.TeamFoundation.WorkItemTracking.Process.WebApi.Models;
 using Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models;
 using Microsoft.VisualStudio.Services.Common;
 using Microsoft.VisualStudio.Services.WebApi;
@@ -20,11 +22,11 @@ namespace adoProcess
                 return 0;
             }
 
-            string org, pat, project, refname, name, type, action, processid;
+            string org, pat, process, project, refname, name, type, action;
 
             try
             {
-                CheckArguments(args, out org, out pat, out project, out refname, out name, out type, out action, out processid);
+                CheckArguments(args, out org, out pat, out project, out refname, out name, out type, out action, out process);
 
                 Uri baseUri = new Uri(org);
 
@@ -52,34 +54,30 @@ namespace adoProcess
                 //get one field by refname
                 if (action == "getfield" && (! String.IsNullOrEmpty(refname)))
                 {
-                    var field = WorkItemTracking.Fields.GetField(vssConnection, refname);
+                    List<ProcessInfo> processList = Process.Process.GetProcesses(vssConnection);
+                    List<ProcessWorkItemType> witList;                    
 
-                    if (field != null)
+                    var table = new ConsoleTable("Process", "Work Item Type", "Field Name", "Field Reference Name");
+
+                    foreach (var processInfo in processList)
                     {
-                        var table = new ConsoleTable("Name", "Reference Name", "Type");
+                        witList = Process.Process.GetWorkItemTypes(vssConnection, processInfo.TypeId);
 
-                        table.AddRow(field.Name, field.ReferenceName, field.Type);
-
-                        table.Write();
-                        Console.WriteLine();
-
-                        if (! String.IsNullOrEmpty(processid))
+                        foreach(var wit in witList)
                         {
-                            List<string> list = WorkItemTracking.Fields.GetWorkItemTypesForField(vssConnection, new System.Guid(processid), refname);
+                            ProcessWorkItemTypeField witField = Process.Process.GetField(vssConnection, processInfo.TypeId, wit.ReferenceName, refname);
 
-                            foreach (string item in list)
+                            if (witField != null)
                             {
-                                Console.WriteLine(item);
+                                table.AddRow(processInfo.Name, wit.Name, witField.Name, witField.ReferenceName);                             
                             }
-                        }
 
-                        return 0;
+                            witField = null;
+                        }
                     }
-                    else
-                    {
-                        Console.WriteLine("Field '" + refname + "' not found");
-                        return 0;
-                    }                   
+
+                    table.Write();
+                    Console.WriteLine();                                      
                 }
 
                 if (action == "searchfields")
@@ -103,7 +101,6 @@ namespace adoProcess
                     Console.WriteLine();
 
                     return 0;
-
                 }               
 
                 //add new field to the organization
@@ -155,6 +152,28 @@ namespace adoProcess
                     }
                 }
 
+                if (action == "listfieldsforprocess")
+                {
+                    List<FieldsPerProcess> list = WorkItemTracking.Fields.ListFieldsForProcess(vssConnection, process);
+
+                    var table = new ConsoleTable("Work Item Type", "Name", "Reference Name", "Type");
+
+                    foreach (FieldsPerProcess item in list)
+                    {
+                        List<ProcessWorkItemTypeField> fields = item.fields;
+
+                        foreach(ProcessWorkItemTypeField field in fields)
+                        {
+                            table.AddRow(item.workItemType.Name, field.Name, field.ReferenceName, field.Type);
+                        }                      
+                    }
+
+                    table.Write();
+                    Console.WriteLine();
+
+                    return 0;
+                }
+
                 vssConnection = null;
             }
             catch (ArgumentException ex)
@@ -168,7 +187,7 @@ namespace adoProcess
             return 0;
         }
 
-        private static void CheckArguments(string[] args, out string org, out string pat, out string project, out string refname, out string name, out string type, out string action, out string processid)
+        private static void CheckArguments(string[] args, out string org, out string pat, out string project, out string refname, out string name, out string type, out string action, out string process)
         {
             org = null;
             refname = null;
@@ -177,7 +196,7 @@ namespace adoProcess
             action = null;
             project = null;
             pat = null;
-            processid = null;
+            process = null;
 
             Dictionary<string, string> argsMap = new Dictionary<string, string>();
             foreach (var arg in args)
@@ -210,8 +229,8 @@ namespace adoProcess
                         case "action":
                             action = value;
                             break;
-                        case "processid":
-                            processid = value;
+                        case "process":
+                            process = value;
                             break;
                         default:
                             throw new ArgumentException("Unknown argument", key);
@@ -234,10 +253,15 @@ namespace adoProcess
                 throw new ArgumentException("addfield action requires refname, name, and type value");
             }
 
-            if ((action == "searchfield" && string.IsNullOrEmpty(name) && string.IsNullOrEmpty(name)))
+            if ((action == "searchfield" && string.IsNullOrEmpty(name) && string.IsNullOrEmpty(refname)))
             {
                  throw new ArgumentException("searchfield action requires name or type value");
-            }           
+            }    
+            
+            if (action == "listfieldsforprocess" && string.IsNullOrEmpty(process))
+            {
+                throw new ArgumentException("listfieldsforprocess action requires process");
+            }
         }
 
         private static void ShowUsage()
@@ -249,18 +273,18 @@ namespace adoProcess
             Console.WriteLine("  /org:{value}           azure devops organization name");
             Console.WriteLine("  /pat:{value}           personal access token");
             Console.WriteLine("");
-            Console.WriteLine("  /action:               listallfields, getfield, addfield");
+            Console.WriteLine("  /action:               listallfields, getfield, addfield, searchfield, listfieldsforprocess");
             Console.WriteLine("  /refname:{value}       refname of field getting or adding");
             Console.WriteLine("  /name:{value}          field friendly name");
-            Console.WriteLine("  /type:{value}          type field creating");
-            Console.WriteLine("  /processid:{value}     process id");
-
-
+            Console.WriteLine("  /process:{value}       name of process");
+            Console.WriteLine("  /type:{value}          type field creating");             
+          
             Console.WriteLine("");
             Console.WriteLine("Examples:");
             Console.WriteLine("");
             Console.WriteLine("  /org:fabrikam /pat:{value} /action:listallfields");
-            Console.WriteLine("  /org:fabrikam /pat:{value} /action:getfield /refname:System.Title /processid: F909F15D-F51D-40EA-BDA4-322DCE13D90F");
+            Console.WriteLine("  /org:fabrikam /pat:{value} /action:getfield /refname:System.Title");
+            Console.WriteLine("  /org:fabrikam /pat:{value} /action:listfieldsforprocess /process:Agile");
 
             Console.WriteLine("");
         }
