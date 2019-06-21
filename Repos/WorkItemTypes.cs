@@ -10,7 +10,7 @@ using Microsoft.VisualStudio.Services.WebApi;
 using System;
 using System.Collections.Generic;
 
-namespace adoProcess.WorkItemTracking
+namespace adoProcess.Repos
 {
     public static class WorkItemTypes
     {    

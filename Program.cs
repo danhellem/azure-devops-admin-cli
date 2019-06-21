@@ -1,5 +1,6 @@
 ﻿using adoProcess.Helper.ConsoleTable;
 using adoProcess.ViewModels;
+using Microsoft.TeamFoundation.Core.WebApi;
 using Microsoft.TeamFoundation.WorkItemTracking.Process.WebApi.Models;
 using Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models;
 using Microsoft.VisualStudio.Services.Common;
@@ -36,7 +37,7 @@ namespace adoProcess
                 //action out all fields
                 if (action == "listallfields")
                 {
-                    var fields = WorkItemTracking.Fields.GetAllFields(vssConnection);
+                    var fields = Repos.Fields.GetAllFields(vssConnection);
 
                     var table = new ConsoleTable("Name", "Reference Name", "Type");
 
@@ -81,39 +82,59 @@ namespace adoProcess
                     //Console.WriteLine();                                      
                 }
 
-                if (action == "getfieldforproject" && (!String.IsNullOrEmpty(refname) && !String.IsNullOrEmpty(project)))
+                if (action == "getfieldforprojects" && (!String.IsNullOrEmpty(refname)))
                 {
-                    Console.WriteLine("Getting list of work item types in the project and looking for field...");
+                    Console.WriteLine("Getting list of projects and work item types...");
                     Console.WriteLine();
 
                     var table = new ConsoleTable("Project", "Work Item Type", "Field Reference Name", "Field Name");
                     WorkItemTypeFieldWithReferences field;
 
-                    List<WorkItemType> list = WorkItemTracking.WorkItemTypes.GetWorkItemTypesForProject(vssConnection, project);
+                    List<TeamProjectReference> projectList = Repos.Projects.GetAllProjects(vssConnection);
+                    List<WorkItemType> witList = null;
 
-                    foreach(var item in list)
-                    {
-                        field = WorkItemTracking.Fields.GetFieldForWorkItemType(vssConnection, project, item.ReferenceName, refname);
+                    foreach (TeamProjectReference projectItem in projectList)
+                    {                        
+                        witList = Repos.WorkItemTypes.GetWorkItemTypesForProject(vssConnection, projectItem.Name);
 
-                        if (field != null)
+                        foreach (WorkItemType witItem in witList)
                         {
-                            table.AddRow(project, item.ReferenceName, field.ReferenceName, field.Name);                           
-                        }
+                            field = Repos.Fields.GetFieldForWorkItemType(vssConnection, projectItem.Name, witItem.ReferenceName, refname);
 
-                        field = null;
+                            if (field != null)
+                            {
+                                table.AddRow(projectItem.Name, witItem.ReferenceName, field.ReferenceName, field.Name);
+                            }
+
+                            field = null;
+                        }
                     }
+
+                    //List<WorkItemType> witList = Repos.WorkItemTypes.GetWorkItemTypesForProject(vssConnection, project);
+
+                    //foreach(WorkItemType item in witList)
+                    //{
+                    //    field = Repos.Fields.GetFieldForWorkItemType(vssConnection, project, item.ReferenceName, refname);
+
+                    //    if (field != null)
+                    //    {
+                    //        table.AddRow(project, item.ReferenceName, field.ReferenceName, field.Name);                           
+                    //    }
+
+                    //    field = null;
+                    //}
 
                     table.Write();
                     Console.WriteLine();
 
                     field = null;
                     table = null;
-                    list = null;
+                    witList = null;
                 }
 
                 if (action == "searchfields")
                 {
-                    var fields = WorkItemTracking.Fields.SearchFields(vssConnection, name, type);
+                    var fields = Repos.Fields.SearchFields(vssConnection, name, type);
 
                     if (fields.Count == 0)
                     {
@@ -138,11 +159,11 @@ namespace adoProcess
                 if (action == "addfield")
                 {
                     //check to see if the type is a legit type
-                    int pos = Array.IndexOf(WorkItemTracking.Fields.Types, type);
+                    int pos = Array.IndexOf(Repos.Fields.Types, type);
 
                     if (pos == -1)
                     {
-                        var types = WorkItemTracking.Fields.Types;
+                        var types = Repos.Fields.Types;
 
                         Console.WriteLine("Invalid field type value '" + type + "'");
                         Console.WriteLine();
@@ -158,7 +179,7 @@ namespace adoProcess
                     }
 
                     //check and make sure the field does not yet exist
-                    var field = WorkItemTracking.Fields.GetField(vssConnection, refname);
+                    var field = Repos.Fields.GetField(vssConnection, refname);
 
                     if (field != null)
                     {
@@ -175,7 +196,7 @@ namespace adoProcess
                         return 0;
                     }
                                        
-                    WorkItemField newField = WorkItemTracking.Fields.AddField(vssConnection, refname, name, type);
+                    WorkItemField newField = Repos.Fields.AddField(vssConnection, refname, name, type);
 
                     if (newField != null)
                     {
@@ -185,7 +206,7 @@ namespace adoProcess
 
                 if (action == "listfieldsforprocess")
                 {
-                    List<FieldsPerProcess> list = WorkItemTracking.Fields.ListFieldsForProcess(vssConnection, process);
+                    List<FieldsPerProcess> list = Repos.Fields.ListFieldsForProcess(vssConnection, process);
 
                     var table = new ConsoleTable("Work Item Type", "Name", "Reference Name", "Type");
 
@@ -279,9 +300,9 @@ namespace adoProcess
                 throw new ArgumentException("getfield action requires refname value");
             }
 
-            if ((action == "getfieldforproject") && string.IsNullOrEmpty(refname) && string.IsNullOrEmpty(project))
+            if ((action == "getfieldforprojects") && string.IsNullOrEmpty(refname))
             {
-                throw new ArgumentException("getfieldforproject action requires field refname value and project name");
+                throw new ArgumentException("getfieldforprojects action requires field refname value");
             }
 
             if ((action == "addfield") && (string.IsNullOrEmpty(refname) || string.IsNullOrEmpty(name) || string.IsNullOrEmpty(type)))
@@ -309,7 +330,7 @@ namespace adoProcess
             Console.WriteLine("  /org:{value}           azure devops organization name");
             Console.WriteLine("  /pat:{value}           personal access token");
             Console.WriteLine("");
-            Console.WriteLine("  /action:               listallfields, getfield, addfield, searchfield, listfieldsforprocess");
+            Console.WriteLine("  /action:               listallfields, getfieldforprojects, addfield, searchfield, listfieldsforprocess");
             Console.WriteLine("  /refname:{value}       refname of field getting or adding");
             Console.WriteLine("  /name:{value}          field friendly name");
             Console.WriteLine("  /process:{value}       name of process");
