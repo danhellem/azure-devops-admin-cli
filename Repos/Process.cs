@@ -10,7 +10,7 @@ using Microsoft.VisualStudio.Services.WebApi;
 using System;
 using System.Collections.Generic;
 
-namespace adoProcess.Process
+namespace adoProcess.Repos
 {
     public static class Process
     {       

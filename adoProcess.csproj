@@ -114,10 +114,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Helper\ConsoleTable.cs" />
-    <Compile Include="Process\Process.cs" />
+    <Compile Include="Repos\Process.cs" />
     <Compile Include="ViewModels\FieldsPerProcess.cs" />
-    <Compile Include="WorkItemTracking\WorkItemTypes.cs" />
-    <Compile Include="WorkItemTracking\Fields.cs" />
+    <Compile Include="Repos\Projects.cs" />
+    <Compile Include="Repos\WorkItemTypes.cs" />
+    <Compile Include="Repos\Fields.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
