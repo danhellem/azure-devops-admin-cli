@@ -52,34 +52,33 @@ namespace adoProcess
                     return 0;
                 }
 
-                //get one field by refname
+                //get one field by refname and me all of the processes that field is in
                 if (action == "getfield" && (! String.IsNullOrEmpty(refname)))
                 {
+                    List<ProcessInfo> processList = Repos.Process.GetProcesses(vssConnection);
+                    List<ProcessWorkItemType> witList;                    
 
-                    //List<ProcessInfo> processList = Process.Process.GetProcesses(vssConnection);
-                    //List<ProcessWorkItemType> witList;                    
+                    var table = new ConsoleTable("Process", "Work Item Type", "Field Name", "Field Reference Name");
 
-                    //var table = new ConsoleTable("Process", "Work Item Type", "Field Name", "Field Reference Name");
+                    foreach (var processInfo in processList)
+                    {
+                        witList = Repos.Process.GetWorkItemTypes(vssConnection, processInfo.TypeId);
 
-                    //foreach (var processInfo in processList)
-                    //{
-                    //    witList = Process.Process.GetWorkItemTypes(vssConnection, processInfo.TypeId);
+                        foreach(var wit in witList)
+                        {
+                            ProcessWorkItemTypeField witField = Repos.Process.GetField(vssConnection, processInfo.TypeId, wit.ReferenceName, refname);
 
-                    //    foreach(var wit in witList)
-                    //    {
-                    //        ProcessWorkItemTypeField witField = Process.Process.GetField(vssConnection, processInfo.TypeId, wit.ReferenceName, refname);
+                            if (witField != null)
+                            {
+                                table.AddRow(processInfo.Name, wit.Name, witField.Name, witField.ReferenceName);                             
+                            }
 
-                    //        if (witField != null)
-                    //        {
-                    //            table.AddRow(processInfo.Name, wit.Name, witField.Name, witField.ReferenceName);                             
-                    //        }
+                            witField = null;
+                        }
+                    }
 
-                    //        witField = null;
-                    //    }
-                    //}
-
-                    //table.Write();
-                    //Console.WriteLine();                                      
+                    table.Write();
+                    Console.WriteLine();                                      
                 }
 
                 if (action == "getfieldforprojects" && (!String.IsNullOrEmpty(refname)))
