@@ -24,15 +24,48 @@ namespace adoProcess
             }
 
             string org, pat, process, project, refname, name, type, action;
+            string wit, targetprocess;
 
             try
             {
-                CheckArguments(args, out org, out pat, out project, out refname, out name, out type, out action, out process);
-
+                CheckArguments(args, out org, out pat, out project, out refname, out name, out type, out action, out process, out wit, out targetprocess);     
+                
                 Uri baseUri = new Uri(org);
 
                 VssCredentials clientCredentials = new VssCredentials(new VssBasicCredential("username", pat));
                 VssConnection vssConnection = new VssConnection(baseUri, clientCredentials);
+
+                if(action == "clonewit")
+                {
+                    bool isContinue = true;
+                    string msg = "";
+
+                    Console.WriteLine("Validating source and target process...");
+                    
+                    List<ProcessInfo> processList = Repos.Process.GetProcesses(vssConnection);
+
+                    ProcessInfo sourceProcessInfo = processList.Find(x => x.Name == process);
+                    ProcessInfo targetProcessInfo = processList.Find(x => x.Name == targetprocess);
+                     
+                    if (sourceProcessInfo != null)
+                    {
+                        Console.WriteLine("   Source '{0}' - success", process);
+                    }
+                    else
+                    {
+                        Console.WriteLine("   Source '{0}' - failed", process);
+                        isContinue = false;
+                    };
+
+                    if (targetProcessInfo != null)
+                    {
+                        Console.WriteLine("   Target '{0}' - success", targetprocess);                        
+                    } else
+                    {
+                        Console.WriteLine("   Target '{0}' - failed", targetprocess);
+                        isContinue = false;
+                    }                    
+                }               
 
                 //action out all fields
                 if (action == "listallfields")
@@ -64,13 +97,13 @@ namespace adoProcess
                     {
                         witList = Repos.Process.GetWorkItemTypes(vssConnection, processInfo.TypeId);
 
-                        foreach(var wit in witList)
+                        foreach(var witItem in witList)
                         {
-                            ProcessWorkItemTypeField witField = Repos.Process.GetField(vssConnection, processInfo.TypeId, wit.ReferenceName, refname);
+                            ProcessWorkItemTypeField witField = Repos.Process.GetField(vssConnection, processInfo.TypeId, witItem.ReferenceName, refname);
 
                             if (witField != null)
                             {
-                                table.AddRow(processInfo.Name, wit.Name, witField.Name, witField.ReferenceName);                             
+                                table.AddRow(processInfo.Name, witItem.Name, witField.Name, witField.ReferenceName);                             
                             }
 
                             witField = null;
@@ -107,21 +140,7 @@ namespace adoProcess
 
                             field = null;
                         }
-                    }
-
-                    //List<WorkItemType> witList = Repos.WorkItemTypes.GetWorkItemTypesForProject(vssConnection, project);
-
-                    //foreach(WorkItemType item in witList)
-                    //{
-                    //    field = Repos.Fields.GetFieldForWorkItemType(vssConnection, project, item.ReferenceName, refname);
-
-                    //    if (field != null)
-                    //    {
-                    //        table.AddRow(project, item.ReferenceName, field.ReferenceName, field.Name);                           
-                    //    }
-
-                    //    field = null;
-                    //}
+                    }                    
 
                     table.Write();
                     Console.WriteLine();
@@ -235,10 +254,10 @@ namespace adoProcess
                 return -1;
             }
 
-            return 0;
+            return 0;        
         }
-
-        private static void CheckArguments(string[] args, out string org, out string pat, out string project, out string refname, out string name, out string type, out string action, out string process)
+          
+        private static void CheckArguments(string[] args, out string org, out string pat, out string project, out string refname, out string name, out string type, out string action, out string process, out string wit, out string targetprocess)
         {
             org = null;
             refname = null;
@@ -248,8 +267,11 @@ namespace adoProcess
             project = null;
             pat = null;
             process = null;
+            wit = null;
+            targetprocess = null;
 
             Dictionary<string, string> argsMap = new Dictionary<string, string>();
+            
             foreach (var arg in args)
             {
                 if (arg[0] == '/' && arg.IndexOf(':') > 1)
@@ -283,11 +305,18 @@ namespace adoProcess
                         case "process":
                             process = value;
                             break;
+                        case "wit":
+                            wit = value;
+                            break;
+                        case "targetprocess":
+                            targetprocess = value;
+                            break;
                         default:
                             throw new ArgumentException("Unknown argument", key);
                     }
                 }
             }
+           
 
             if (org == null || pat == null)
             {
@@ -318,7 +347,25 @@ namespace adoProcess
             {
                 throw new ArgumentException("listfieldsforprocess action requires process");
             }
-        }
+
+            if (action != "clonewit")            {                
+
+                if (process == null)
+                {
+                    throw new ArgumentException("Missing required argument 'process'");
+                }
+
+                if (wit == null)
+                {
+                    throw new ArgumentException("Missing required argument 'wit' for the work item type you want to clone");
+                }
+
+                if (targetprocess == null)
+                {
+                    throw new ArgumentException("Missing required argument 'targetprocess' for the process you want to clone the work item type into");
+                }
+            }           
+        }        
 
         private static void ShowUsage()
         {
@@ -326,14 +373,15 @@ namespace adoProcess
             Console.WriteLine("");
             Console.WriteLine("Arguments:");
             Console.WriteLine("");
-            Console.WriteLine("  /org:{value}           azure devops organization name");
-            Console.WriteLine("  /pat:{value}           personal access token");
+            Console.WriteLine("  /org:{value}               azure devops organization name");
+            Console.WriteLine("  /pat:{value}               personal access token");
             Console.WriteLine("");
-            Console.WriteLine("  /action:               listallfields, getfieldforprojects, addfield, searchfield, listfieldsforprocess");
-            Console.WriteLine("  /refname:{value}       refname of field getting or adding");
-            Console.WriteLine("  /name:{value}          field friendly name");
-            Console.WriteLine("  /process:{value}       name of process");
-            Console.WriteLine("  /type:{value}          type field creating");             
+            Console.WriteLine("  /action:                   listallfields, getfieldforprojects, addfield, searchfield, listfieldsforprocess, clonewit");
+            Console.WriteLine("  /refname:{value}           refname of field getting or adding");
+            Console.WriteLine("  /name:{value}              field friendly name");
+            Console.WriteLine("  /process:{value}           name of process");
+            Console.WriteLine("  /type:{value}              type field creating"); 
+            Console.WriteLine("  /targetprocess:{value}     target process for where you want to clone a wit into");
           
             Console.WriteLine("");
             Console.WriteLine("Examples:");
@@ -341,6 +389,7 @@ namespace adoProcess
             Console.WriteLine("  /org:fabrikam /pat:{value} /action:listallfields");
             Console.WriteLine("  /org:fabrikam /pat:{value} /action:getfield /refname:System.Title");
             Console.WriteLine("  /org:fabrikam /pat:{value} /action:listfieldsforprocess /process:Agile");
+            Console.WriteLine("  /org:fabrikam /pat:{value} /action:clonewit /process:sourceprocess /refname:custom.ticket /targetprocess:targetprocess");
 
             Console.WriteLine("");
         }
