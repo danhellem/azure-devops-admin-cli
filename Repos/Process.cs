@@ -5,6 +5,7 @@ using Microsoft.TeamFoundation.WorkItemTracking.Process.WebApi;
 using Microsoft.TeamFoundation.WorkItemTracking.Process.WebApi.Models;
 using Microsoft.TeamFoundation.WorkItemTracking.WebApi;
 using Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models;
+using Microsoft.VisualStudio.Services.ActivityStatistic;
 using Microsoft.VisualStudio.Services.Common;
 using Microsoft.VisualStudio.Services.WebApi;
 using System;
@@ -45,6 +46,22 @@ namespace adoProcess.Repos
                 return null;
             }
         }
+        
+        public static ProcessWorkItemType GetWorkItemType(VssConnection connection, System.Guid processId, string witRefName)
+        {
+            WorkItemTrackingProcessHttpClient client = connection.GetClient<WorkItemTrackingProcessHttpClient>();
+
+            try
+            {
+                ProcessWorkItemType result = client.GetProcessWorkItemTypeAsync(processId, witRefName).Result;                
+
+                return result;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
 
         public static ProcessWorkItemTypeField GetField(VssConnection connection, Guid processId, string witRefName, string fieldRefName)
         {
@@ -61,5 +78,28 @@ namespace adoProcess.Repos
                 return null;
             }
         }       
+
+        public static ProcessWorkItemType CloneWorkItemType(VssConnection connection, string witRefName, Guid processId)
+        {           
+            ProcessWorkItemType wit = Process.GetWorkItemType(connection, processId, witRefName);
+            
+            if (wit == null) return null;              
+            
+            WorkItemTrackingProcessHttpClient client = connection.GetClient<WorkItemTrackingProcessHttpClient>();
+            
+            CreateProcessWorkItemTypeRequest createWitRequest = new CreateProcessWorkItemTypeRequest()
+            {                
+                Color = wit.Color,
+                Description = wit.Description,
+                Name = wit.Name,
+                Icon = wit.Icon,
+                InheritsFrom = wit.Inherits,
+                IsDisabled = false                 
+            };
+
+            ProcessWorkItemType results = client.CreateProcessWorkItemTypeAsync(createWitRequest, processId).Result;
+
+            return results;
+        }
     }
 }

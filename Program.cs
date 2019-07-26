@@ -1,13 +1,16 @@
 ﻿using adoProcess.Helper.ConsoleTable;
 using adoProcess.ViewModels;
+using Microsoft.TeamFoundation.Build.WebApi;
 using Microsoft.TeamFoundation.Core.WebApi;
 using Microsoft.TeamFoundation.WorkItemTracking.Process.WebApi.Models;
 using Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models;
+using Microsoft.VisualStudio.Services.ActivityStatistic;
 using Microsoft.VisualStudio.Services.Common;
 using Microsoft.VisualStudio.Services.WebApi;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Remoting.Messaging;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -24,47 +27,24 @@ namespace adoProcess
             }
 
             string org, pat, process, project, refname, name, type, action;
-            string wit, targetprocess;
+            string witrefname, targetprocess;
 
             try
             {
-                CheckArguments(args, out org, out pat, out project, out refname, out name, out type, out action, out process, out wit, out targetprocess);     
+                CheckArguments(args, out org, out pat, out project, out refname, out name, out type, out action, out process, out witrefname, out targetprocess);     
                 
                 Uri baseUri = new Uri(org);
 
                 VssCredentials clientCredentials = new VssCredentials(new VssBasicCredential("username", pat));
                 VssConnection vssConnection = new VssConnection(baseUri, clientCredentials);
 
-                if(action == "clonewit")
-                {
-                    bool isContinue = true;
-                    string msg = "";
+                if (action == "clonewit")                
+                {                   
+                    Console.WriteLine("Start Validation...");
 
-                    Console.WriteLine("Validating source and target process...");
+                    bool val = CloneWitAndProcessValidation(vssConnection, process, targetprocess, witrefname);
                     
-                    List<ProcessInfo> processList = Repos.Process.GetProcesses(vssConnection);
-
-                    ProcessInfo sourceProcessInfo = processList.Find(x => x.Name == process);
-                    ProcessInfo targetProcessInfo = processList.Find(x => x.Name == targetprocess);
-                     
-                    if (sourceProcessInfo != null)
-                    {
-                        Console.WriteLine("   Source '{0}' - success", process);
-                    }
-                    else
-                    {
-                        Console.WriteLine("   Source '{0}' - failed", process);
-                        isContinue = false;
-                    };
-
-                    if (targetProcessInfo != null)
-                    {
-                        Console.WriteLine("   Target '{0}' - success", targetprocess);                        
-                    } else
-                    {
-                        Console.WriteLine("   Target '{0}' - failed", targetprocess);
-                        isContinue = false;
-                    }                    
+                    if (! val) return 0;
                 }               
 
                 //action out all fields
@@ -256,8 +236,66 @@ namespace adoProcess
 
             return 0;        
         }
-          
-        private static void CheckArguments(string[] args, out string org, out string pat, out string project, out string refname, out string name, out string type, out string action, out string process, out string wit, out string targetprocess)
+         
+        private static bool CloneWitAndProcessValidation(VssConnection vssConnection, string process, string targetProcess, string witRefName)
+        {
+            List<ProcessInfo> processList = Repos.Process.GetProcesses(vssConnection);
+
+            ProcessInfo sourceProcessInfo = processList.Find(x => x.Name == process);
+            ProcessInfo targetProcessInfo = processList.Find(x => x.Name == targetProcess);
+
+            Console.Write("  Validating source process '{0}'...", process);
+
+            if (sourceProcessInfo == null)
+            {
+                Console.Write("failed (process not found) \n");
+                return false;
+            }
+            else
+            {
+                Console.Write("done \n");
+            };
+
+            Console.Write("  Validating target process '{0}'...", targetProcess);
+
+            if (targetProcessInfo == null)
+            {
+                Console.Write("failed (process not found) \n");
+                return false;
+            }
+            else
+            {
+                Console.Write("done \n");
+            };
+
+            Console.Write("  Validating work item type '{0}' exists in source process...", witRefName);
+
+            if (Repos.Process.GetWorkItemType(vssConnection, sourceProcessInfo.TypeId, witRefName) == null)
+            {
+                Console.Write("failed (work item type not found) \n");
+                return false;
+            }
+            else
+            {
+                Console.Write("done \n");
+            }
+
+            Console.Write("  Validating work item type {0} does not exist in target process...", witRefName);
+
+            if (Repos.Process.GetWorkItemType(vssConnection, targetProcessInfo.TypeId, witRefName) != null)
+            {
+                Console.Write("failed (work item type found) \n");
+                return false;
+            }
+            else
+            {
+                Console.Write("done \n");
+            }
+
+            return true;
+        }
+
+        private static void CheckArguments(string[] args, out string org, out string pat, out string project, out string refname, out string name, out string type, out string action, out string process, out string witrefname, out string targetprocess)
         {
             org = null;
             refname = null;
@@ -267,7 +305,7 @@ namespace adoProcess
             project = null;
             pat = null;
             process = null;
-            wit = null;
+            witrefname = null;
             targetprocess = null;
 
             Dictionary<string, string> argsMap = new Dictionary<string, string>();
@@ -305,8 +343,8 @@ namespace adoProcess
                         case "process":
                             process = value;
                             break;
-                        case "wit":
-                            wit = value;
+                        case "witrefname":
+                            witrefname = value;
                             break;
                         case "targetprocess":
                             targetprocess = value;
@@ -355,9 +393,9 @@ namespace adoProcess
                     throw new ArgumentException("Missing required argument 'process'");
                 }
 
-                if (wit == null)
+                if (witrefname == null)
                 {
-                    throw new ArgumentException("Missing required argument 'wit' for the work item type you want to clone");
+                    throw new ArgumentException("Missing required argument 'witrefname' for the work item type you want to clone");
                 }
 
                 if (targetprocess == null)
@@ -389,7 +427,7 @@ namespace adoProcess
             Console.WriteLine("  /org:fabrikam /pat:{value} /action:listallfields");
             Console.WriteLine("  /org:fabrikam /pat:{value} /action:getfield /refname:System.Title");
             Console.WriteLine("  /org:fabrikam /pat:{value} /action:listfieldsforprocess /process:Agile");
-            Console.WriteLine("  /org:fabrikam /pat:{value} /action:clonewit /process:sourceprocess /refname:custom.ticket /targetprocess:targetprocess");
+            Console.WriteLine("  /org:fabrikam /pat:{value} /action:clonewit /process:sourceprocess /witrefname:custom.ticket /targetprocess:targetprocess");
 
             Console.WriteLine("");
         }
