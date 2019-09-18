@@ -1,3 +1,5 @@
+> I am leaving Azure DevOps so this code will not be actively worked on. If you would like to take ownership of the repo please let us know.
+
 # azure-devops-process-cli
 CLI to manage some actions for inherited process in Azure DevOps
 
