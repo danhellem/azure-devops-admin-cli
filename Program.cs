@@ -1,4 +1,6 @@
-﻿using adoProcess.Helper.ConsoleTable;
+﻿using adoProcess.Helper;
+using adoProcess.Helper.ConsoleTable;
+using adoProcess.Models;
 using adoProcess.ViewModels;
 using Microsoft.TeamFoundation.Build.WebApi;
 using Microsoft.TeamFoundation.Core.WebApi;
@@ -9,6 +11,7 @@ using Microsoft.VisualStudio.Services.Common;
 using Microsoft.VisualStudio.Services.WebApi;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Eventing.Reader;
 using System.Linq;
 using System.Runtime.Remoting.Messaging;
 using System.Text;
@@ -19,18 +22,21 @@ namespace adoProcess
     public class Program
     {
         public static int Main(string[] args)
-        {
+        {    
+
             if (args.Length == 0)
             {
                 ShowUsage();
                 return 0;
             }
 
+            args = SetArgumentsFromConfig(args);
+
             string org, pat, process, project, refname, name, type, action;
             string witrefname, targetprocess;
 
             try
-            {
+            {   
                 CheckArguments(args, out org, out pat, out project, out refname, out name, out type, out action, out process, out witrefname, out targetprocess);     
                 
                 Uri baseUri = new Uri(org);
@@ -308,7 +314,7 @@ namespace adoProcess
             witrefname = null;
             targetprocess = null;
 
-            Dictionary<string, string> argsMap = new Dictionary<string, string>();
+            //Dictionary<string, string> argsMap = new Dictionary<string, string>();
             
             foreach (var arg in args)
             {
@@ -353,8 +359,7 @@ namespace adoProcess
                             throw new ArgumentException("Unknown argument", key);
                     }
                 }
-            }
-           
+            }           
 
             if (org == null || pat == null)
             {
@@ -386,7 +391,7 @@ namespace adoProcess
                 throw new ArgumentException("listfieldsforprocess action requires process");
             }
 
-            if (action != "clonewit")            {                
+            if (action == "clonewit")            {                
 
                 if (process == null)
                 {
@@ -404,6 +409,50 @@ namespace adoProcess
                 }
             }           
         }        
+
+        private static string[] SetArgumentsFromConfig (string[] args)
+        {
+            var configHelper = new ConfigHelper();
+            bool org = false;
+            bool pat = false;
+           
+            foreach (var arg in args)
+            {
+                if (arg[0] == '/' && arg.IndexOf(':') > 1)
+                {
+                    string key = arg.Substring(1, arg.IndexOf(':') - 1);
+                    string value = arg.Substring(arg.IndexOf(':') + 1);
+
+                    switch (key)
+                    {
+                        case "org":
+                            org = true;
+                            break;
+                        case "pat":
+                            pat = true;
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            }
+
+            if (! org && !String.IsNullOrEmpty(configHelper.Organization))
+            {
+                Array.Resize(ref args, args.Length + 1);
+                args[args.Length - 1] = "/org:" + configHelper.Organization;
+            }
+
+            if (!pat && !String.IsNullOrEmpty(configHelper.PersonalAccessToken))
+            {
+                Array.Resize(ref args, args.Length + 1);
+                args[args.Length - 1] = "/pat:" + configHelper.PersonalAccessToken;
+            }
+
+            configHelper = null;
+
+            return args;
+        }
 
         private static void ShowUsage()
         {
