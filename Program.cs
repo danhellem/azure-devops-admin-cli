@@ -53,7 +53,7 @@ namespace adoProcess
                     if (! val) return 0;
                 }               
 
-                //action out all fields
+                // action out all fields
                 if (action == "listallfields")
                 {
                     var fields = Repos.Fields.GetAllFields(vssConnection);
@@ -71,7 +71,66 @@ namespace adoProcess
                     return 0;
                 }
 
-                //get one field by refname and me all of the processes that field is in
+                // action out all fields
+                if (action == "allpicklists")
+                {
+                    Console.Write("Loading all picklists and fields: ");
+
+                    List<WorkItemField> fields = Repos.Fields.GetAllFields(vssConnection);
+                    List<PickListMetadata> picklists = Repos.Process.ListPicklists(vssConnection);
+                   
+                    Console.Write("Done");
+                    Console.WriteLine("");
+
+                    var table = new ConsoleTable("Name", "Id", "Type", "Fields");
+
+                    foreach (PickListMetadata item in picklists)
+                    {
+                        string fieldName = string.Empty;
+                        var field = fields.Where(x => x.IsPicklist == true && x.PicklistId == item.Id);                    
+                        fieldName = field.Count() > 0 ? field.FirstOrDefault().Name : String.Empty;                        
+
+                        table.AddRow(item.Name, item.Id, item.Type, fieldName);                        
+                    }
+
+                    table.Write();
+                    Console.WriteLine();
+
+                    return 0;
+                }
+
+                // action out all fields
+                if (action == "picklistswithnofield")
+                {
+                    Console.Write(" Loading all picklists and fields: ");
+
+                    List<WorkItemField> fields = Repos.Fields.GetAllFields(vssConnection);
+                    List<PickListMetadata> picklists = Repos.Process.ListPicklists(vssConnection);
+
+                    Console.WriteLine("Done");
+                    Console.WriteLine(" ");
+                    Console.WriteLine(" These picklists are not being used by any fields");
+                  
+                    var table = new ConsoleTable("Name", "Id", "Type");
+
+                    foreach (PickListMetadata item in picklists)
+                    {
+                        string fieldName = string.Empty;
+                        var field = fields.Where(x => x.IsPicklist == true && x.PicklistId == item.Id);
+                        
+                        if (field.Count() == 0)
+                        {
+                            table.AddRow(item.Name, item.Id, item.Type);
+                        }                        
+                    }
+
+                    table.Write();
+                    Console.WriteLine();
+
+                    return 0;
+                }
+
+                // get one field by refname and me all of the processes that field is in
                 if (action == "getfield" && (! String.IsNullOrEmpty(refname)))
                 {
                     List<ProcessInfo> processList = Repos.Process.GetProcesses(vssConnection);
@@ -159,7 +218,7 @@ namespace adoProcess
                     return 0;
                 }               
 
-                //add new field to the organization
+                // add new field to the organization
                 if (action == "addfield")
                 {
                     //check to see if the type is a legit type
@@ -463,7 +522,7 @@ namespace adoProcess
             Console.WriteLine("  /org:{value}               azure devops organization name");
             Console.WriteLine("  /pat:{value}               personal access token");
             Console.WriteLine("");
-            Console.WriteLine("  /action:                   listallfields, getfieldforprojects, addfield, searchfield, listfieldsforprocess, clonewit");
+            Console.WriteLine("  /action:                   listallfields, getfieldforprojects, addfield, searchfield, listfieldsforprocess, allpicklists, picklistswithnofield, clonewit");
             Console.WriteLine("  /refname:{value}           refname of field getting or adding");
             Console.WriteLine("  /name:{value}              field friendly name");
             Console.WriteLine("  /process:{value}           name of process");
@@ -474,6 +533,8 @@ namespace adoProcess
             Console.WriteLine("Examples:");
             Console.WriteLine("");
             Console.WriteLine("  /org:fabrikam /pat:{value} /action:listallfields");
+            Console.WriteLine("  /org:fabrikam /pat:{value} /action:allpicklists");
+            Console.WriteLine("  /org:fabrikam /pat:{value} /action:picklistswithnofield");
             Console.WriteLine("  /org:fabrikam /pat:{value} /action:getfield /refname:System.Title");
             Console.WriteLine("  /org:fabrikam /pat:{value} /action:listfieldsforprocess /process:Agile");
             Console.WriteLine("  /org:fabrikam /pat:{value} /action:clonewit /process:sourceprocess /witrefname:custom.ticket /targetprocess:targetprocess");

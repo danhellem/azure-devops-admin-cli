@@ -10,6 +10,7 @@ using Microsoft.VisualStudio.Services.Common;
 using Microsoft.VisualStudio.Services.WebApi;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace adoProcess.Repos
 {
@@ -100,6 +101,22 @@ namespace adoProcess.Repos
             ProcessWorkItemType results = client.CreateProcessWorkItemTypeAsync(createWitRequest, processId).Result;
 
             return results;
+        }
+
+        public static List<PickListMetadata> ListPicklists(VssConnection connection)
+        {
+            WorkItemTrackingProcessHttpClient client = connection.GetClient<WorkItemTrackingProcessHttpClient>();
+
+            try
+            {
+                List<PickListMetadata> list = client.GetListsMetadataAsync(connection).Result;
+
+                return list;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
         }
     }
 }
