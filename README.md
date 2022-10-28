@@ -1,11 +1,6 @@
 # azure-devops-process-cli
 CLI to manage some actions for inherited process in Azure DevOps
 
-### Supported actions are 
-- list all fields
-- get field
-- add field (with defined refname)
-
 ### Arguments
 
 ```
@@ -18,7 +13,7 @@ CLI to manage some actions for inherited process in Azure DevOps
 /type:{value}           type field creating        
 ```
 
-### Actions
+### Supported Actions
 
 ```
 listallfields           lists all fields in the organization
