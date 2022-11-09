@@ -5,7 +5,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace adoProcess.Helper.ConsoleTable
+namespace adoAdmin.Helper.ConsoleTable
 {
     public class ConsoleTable
     {

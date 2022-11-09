@@ -6,7 +6,7 @@ using Microsoft.VisualStudio.Services.WebApi;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace adoProcess.Repos
+namespace adoAdmin.Repos
 {
     public static class Projects
     {    

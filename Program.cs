@@ -1,7 +1,7 @@
-﻿using adoProcess.Helper;
-using adoProcess.Helper.ConsoleTable;
-using adoProcess.Models;
-using adoProcess.ViewModels;
+﻿using adoAdmin.Helper;
+using adoAdmin.Helper.ConsoleTable;
+using adoAdmin.Models;
+using adoAdmin.ViewModels;
 using Microsoft.TeamFoundation.Build.WebApi;
 using Microsoft.TeamFoundation.Core.WebApi;
 using Microsoft.TeamFoundation.WorkItemTracking.Process.WebApi.Models;
@@ -17,7 +17,7 @@ using System.Runtime.Remoting.Messaging;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace adoProcess
+namespace adoAdmin
 {
     public class Program
     {

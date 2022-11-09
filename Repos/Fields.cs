@@ -1,6 +1,6 @@
-﻿using adoProcess.Helper;
-using adoProcess.Helper.ConsoleTable;
-using adoProcess.ViewModels;
+﻿using adoAdmin.Helper;
+using adoAdmin.Helper.ConsoleTable;
+using adoAdmin.ViewModels;
 using Microsoft.TeamFoundation.WorkItemTracking.Process.WebApi;
 using Microsoft.TeamFoundation.WorkItemTracking.Process.WebApi.Models;
 using Microsoft.TeamFoundation.WorkItemTracking.WebApi;
@@ -10,7 +10,7 @@ using Microsoft.VisualStudio.Services.WebApi;
 using System;
 using System.Collections.Generic;
 
-namespace adoProcess.Repos
+namespace adoAdmin.Repos
 {
     public static class Fields
     {   

@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{38B89549-EC6D-432E-B3DC-F7FBDB9715FD}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>adoProcess</RootNamespace>
-    <AssemblyName>adoProcess</AssemblyName>
+    <RootNamespace>adoAdmin</RootNamespace>
+    <AssemblyName>adoadmin</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>

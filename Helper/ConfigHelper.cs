@@ -1,4 +1,4 @@
-﻿using adoProcess.Models;
+﻿using adoAdmin.Models;
 using Microsoft.VisualStudio.Services.Organization.Client;
 using Newtonsoft.Json;
 using System;
@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace adoProcess.Helper
+namespace adoAdmin.Helper
 {
     public class ConfigHelper
     {
