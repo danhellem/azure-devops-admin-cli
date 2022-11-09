@@ -1,5 +1,5 @@
-# azure-devops-process-cli
-CLI to manage some actions for inherited process in Azure DevOps
+# azure-devops-admin-cli
+CLI to manage work item admin tasks in Azure DevOps
 
 ### Arguments
 
