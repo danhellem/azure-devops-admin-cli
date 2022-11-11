@@ -15,6 +15,7 @@ using System.Diagnostics.Eventing.Reader;
 using System.Linq;
 using System.Runtime.Remoting.Messaging;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace adoAdmin
@@ -34,10 +35,11 @@ namespace adoAdmin
 
             string org, pat, process, project, refname, name, type, action;
             string witrefname, targetprocess;
+            int days;
 
             try
             {   
-                CheckArguments(args, out org, out pat, out project, out refname, out name, out type, out action, out process, out witrefname, out targetprocess);     
+                CheckArguments(args, out org, out pat, out project, out refname, out name, out type, out action, out process, out witrefname, out targetprocess, out days);     
                 
                 Uri baseUri = new Uri(org);
 
@@ -289,6 +291,79 @@ namespace adoAdmin
                     return 0;
                 }
 
+                // action out all fields
+                if (action == "emptyrecyclebin")
+                {
+                    Console.Write(" Loading deleted items: ");
+
+                    List<WorkItemReference> workitems = Repos.RecycleBin.GetDeletedWorkItemsByWiql(vssConnection, project, days);
+
+                    Console.WriteLine(workitems.Count);
+
+                    if (workitems.Count < 1)
+                    {
+                        Console.WriteLine($" There are no items in the recycle bin that are ready to be destroyed (-{days} days).");
+                        Console.WriteLine(" Completed.");
+                        return 0;
+                    }
+
+                    Console.WriteLine(" ");
+                    Console.WriteLine(" WARNING!", Console.ForegroundColor = ConsoleColor.Red);
+                    Console.WriteLine(" You are about to permentantly destroy work items. This action cannot be undone.", Console.ForegroundColor = ConsoleColor.Red);
+                    Console.WriteLine(" ");
+                    Console.ResetColor();
+                    Console.WriteLine(" Press any key to continue or 'N' to abort.");
+
+                    if (Console.ReadKey().Key == ConsoleKey.N) return 0;
+
+                    while (workitems.Count > 0)
+                    {
+                        int i = 0;
+                        String[] ids = workitems.Count >= 200 ? new String[200] : new String[workitems.Count];
+
+                        foreach (WorkItemReference workitem in workitems)
+                        {
+                            ids[i] = workitem.Id.ToString();
+                            i = i + 1;
+                        }
+
+                        string val = String.Join(",", ids);
+
+                        Console.Write(" Destorying items: ");
+
+                        IDestroyWorkItemsResponse response = Repos.RecycleBin.DestroyWorkItems(pat, org, val);
+
+                        if (! response.Success)
+                        {
+                            Console.WriteLine("Failed.");
+                            Console.WriteLine(" ");
+                            Console.WriteLine(response.StatusCode);
+                            Console.WriteLine(response.Message);
+                            break;
+                        }
+
+                        Console.WriteLine("Success.");
+                        Console.WriteLine(" ");
+
+                        Console.Write(" Waiting a moment...");
+                        Thread.Sleep(2000);
+                        Console.WriteLine("done.");
+                        Console.WriteLine(" ");
+
+                        Console.Write(" Loading more deleted items: ");
+
+                        workitems = Repos.RecycleBin.GetDeletedWorkItemsByWiql(vssConnection, project);
+
+                        Console.WriteLine(workitems.Count);
+                    }
+
+                    //table.Write();
+                    Console.WriteLine(" ");
+                    Console.WriteLine(" Complete.");
+
+                    return 0;
+                }
+
                 vssConnection = null;
             }
             catch (ArgumentException ex)
@@ -360,7 +435,7 @@ namespace adoAdmin
             return true;
         }
 
-        private static void CheckArguments(string[] args, out string org, out string pat, out string project, out string refname, out string name, out string type, out string action, out string process, out string witrefname, out string targetprocess)
+        private static void CheckArguments(string[] args, out string org, out string pat, out string project, out string refname, out string name, out string type, out string action, out string process, out string witrefname, out string targetprocess, out int days)
         {
             org = null;
             refname = null;
@@ -372,6 +447,7 @@ namespace adoAdmin
             process = null;
             witrefname = null;
             targetprocess = null;
+            days = 0;
 
             //Dictionary<string, string> argsMap = new Dictionary<string, string>();
             
@@ -413,6 +489,9 @@ namespace adoAdmin
                             break;
                         case "targetprocess":
                             targetprocess = value;
+                            break;
+                        case "days":
+                            days = Convert.ToInt32(value);
                             break;
                         default:
                             throw new ArgumentException("Unknown argument", key);
@@ -466,7 +545,12 @@ namespace adoAdmin
                 {
                     throw new ArgumentException("Missing required argument 'targetprocess' for the process you want to clone the work item type into");
                 }
-            }           
+            } 
+            
+            if (action == "emptyrecyclebin" && string.IsNullOrEmpty(project))
+            {
+                throw new ArgumentException("Missing required argument 'project'");
+            }
         }        
 
         private static string[] SetArgumentsFromConfig (string[] args)
