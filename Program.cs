@@ -13,6 +13,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.Eventing.Reader;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.Remoting.Messaging;
 using System.Text;
 using System.Threading;
@@ -36,6 +37,7 @@ namespace adoAdmin
             string org, pat, process, project, refname, name, type, action;
             string witrefname, targetprocess;
             int days;
+            bool _deleteOverRide = false;
 
             try
             {   
@@ -316,6 +318,28 @@ namespace adoAdmin
 
                     if (Console.ReadKey().Key == ConsoleKey.N) return 0;
 
+                    // use delete override of batch api is failing (edge case bug)
+                    // this will delete one a time in the current batch
+                    if (_deleteOverRide)
+                    {
+                        Console.WriteLine($" Running Delete Override (one at a time)...");
+
+                        int i = 1;
+
+                        // Loop over strings.
+                        foreach (WorkItemReference workitem in workitems)
+                        {
+                            Console.WriteLine($"  [{i}] Destroying work item {workitem.Id}");
+                            Repos.RecycleBin.DestroyWorkItem(vssConnection, workitem.Id);
+                            i = i + 1;
+                        }
+
+                        Console.WriteLine(" ");
+                        Console.WriteLine($" Completed set of {workitems.Count}");
+
+                        return 0;
+                    }
+
                     while (workitems.Count > 0)
                     {
                         int i = 0;
@@ -327,13 +351,13 @@ namespace adoAdmin
                             i = i + 1;
                         }
 
-                        string val = String.Join(",", ids);
-
-                        Console.Write(" Destorying items: ");
+                        string val = String.Join(",", ids);                
+                      
+                        Console.Write(" Destroying items: ");
 
                         IDestroyWorkItemsResponse response = Repos.RecycleBin.DestroyWorkItems(pat, org, val);
 
-                        if (! response.Success)
+                        if (!response.Success)
                         {
                             Console.WriteLine("Failed.");
                             Console.WriteLine(" ");
@@ -352,9 +376,9 @@ namespace adoAdmin
 
                         Console.Write(" Loading more deleted items: ");
 
-                        workitems = Repos.RecycleBin.GetDeletedWorkItemsByWiql(vssConnection, project);
+                        workitems = Repos.RecycleBin.GetDeletedWorkItemsByWiql(vssConnection, project, days);
 
-                        Console.WriteLine(workitems.Count);
+                        Console.WriteLine(workitems.Count);                                              
                     }
 
                     //table.Write();

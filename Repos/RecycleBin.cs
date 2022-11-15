@@ -78,5 +78,11 @@ namespace adoAdmin.Repos
             }
         }
 
+        public static void DestroyWorkItem(VssConnection connection, int id)
+        {
+            WorkItemTrackingHttpClient client = connection.GetClient<WorkItemTrackingHttpClient>();
+            client.DestroyWorkItemAsync(id).SyncResult();
+        }
+
     }    
 }
