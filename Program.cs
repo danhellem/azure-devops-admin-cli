@@ -662,7 +662,7 @@ namespace adoAdmin
 
         private static void ShowUsage()
         {
-            Console.WriteLine("CLI to manage an inherited process in Azure DevOps");
+            Console.WriteLine("CLI to manage an inherited process in Azure DevOps. View Readme.MD in GitHub repo for full details.");
             Console.WriteLine("");
             Console.WriteLine("Arguments:");
             Console.WriteLine("");
