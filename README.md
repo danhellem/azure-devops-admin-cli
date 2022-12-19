@@ -15,7 +15,7 @@ CLI to manage work item admin tasks in Azure DevOps
 /days:{value}           used with emptyrecyclebin action. Number of days in the past from today to destroy work items
 ```
 
-## 📃Process actions
+## 📃Process
 
 ```
 listallfields           lists all fields in the organization
@@ -36,7 +36,7 @@ picklistswithnofield    picklists that are not being used
 /org:{organization name}/pat:{value} /action:getfield /refname:System.Title
 ```
 
-## ♻️ Recylebin actions
+## ♻️ Recyle bin
 
 Used to delete work items forever out the recycle bin.
 
@@ -56,7 +56,7 @@ Empty work items that have not been updated in the last 365 days
 /org:{organization name} /pat:{value} /project:{project name} /days:365
 ```
 
-## 🏷️ Tags actions
+## 🏷️ Tags 
 
 Find all the tags that are not used and can be deleted.
 
