@@ -159,6 +159,7 @@
     <Compile Include="Helper\ConsoleTable.cs" />
     <Compile Include="Models\Config.cs" />
     <Compile Include="Repos\Process.cs" />
+    <Compile Include="Repos\Tags.cs" />
     <Compile Include="Repos\RecycleBin.cs" />
     <Compile Include="ViewModels\DestroyWorkItemsResponse.cs" />
     <Compile Include="ViewModels\FieldsPerProcess.cs" />

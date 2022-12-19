@@ -55,3 +55,11 @@ Empty work items that have not been updated in the last 365 days
 ```
 /org:{organization name} /pat:{value} /project:{project name} /days:365
 ```
+
+## 🏷️ Tags actions
+
+Find all the tags that are not used and can be deleted.
+
+```
+/action:listemptytags /org:{organization name} /pat:{value} /project:{project name}
+```

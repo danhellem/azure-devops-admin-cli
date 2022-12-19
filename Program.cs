@@ -1,6 +1,7 @@
 ﻿using adoAdmin.Helper;
 using adoAdmin.Helper.ConsoleTable;
 using adoAdmin.Models;
+using adoAdmin.Repos;
 using adoAdmin.ViewModels;
 using Microsoft.TeamFoundation.Build.WebApi;
 using Microsoft.TeamFoundation.Core.WebApi;
@@ -94,7 +95,7 @@ namespace adoAdmin
                         var field = fields.Where(x => x.IsPicklist == true && x.PicklistId == item.Id);                    
                         fieldName = field.Count() > 0 ? field.FirstOrDefault().Name : String.Empty;                        
 
-                        table.AddRow(item.Name, item.Id, item.Type, fieldName);                        
+                        table.AddRow(item.Name, item.Id, item.Type, fieldName).Write();                        
                     }
 
                     table.Write();
@@ -388,6 +389,39 @@ namespace adoAdmin
                     return 0;
                 }
 
+                // list tags and tag usage
+                if (action == "listemptytags")
+                {
+                    Console.Write(" Loading tags: ");
+
+                    List<WorkItemTagDefinition> tags = Repos.Tags.GetAllTags(vssConnection, project);
+
+                    Console.Write("Done");
+                    Console.WriteLine("");
+
+                    var table = new ConsoleTable("Name", "Id");
+
+                    Console.Write(" Looping through each tag to find linked worked items. This may take a while...");
+                  
+                    foreach (WorkItemTagDefinition tag in tags)
+                    {
+                        List<WorkItemReference> list = Repos.Tags.FetchWorkItemByTag(vssConnection, project, tag.Name);
+
+                        if (list.Count == 0) {
+                            table.AddRow(tag.Name, tag.Id);
+                        }                      
+                    }
+
+                    Console.Write("Done");
+                    Console.WriteLine("");
+                    Console.WriteLine("");
+                    Console.WriteLine(" Tags that can be deleted");
+
+                    if (table.Rows .Count > 0 ) { table.Write(); } else { Console.WriteLine(" No empty tags found"); }
+                    
+                    Console.WriteLine();
+                }
+
                 vssConnection = null;
             }
             catch (ArgumentException ex)
@@ -575,6 +609,11 @@ namespace adoAdmin
             {
                 throw new ArgumentException("Missing required argument 'project'");
             }
+
+            if (action == "listemptytags" && string.IsNullOrEmpty(project))
+            {
+                throw new ArgumentException("Missing required argument 'project'");
+            }
         }        
 
         private static string[] SetArgumentsFromConfig (string[] args)
@@ -636,14 +675,16 @@ namespace adoAdmin
             Console.WriteLine("  /process:{value}           name of process");
             Console.WriteLine("  /type:{value}              type field creating"); 
             Console.WriteLine("  /targetprocess:{value}     target process for where you want to clone a wit into");
-          
+                      
             Console.WriteLine("");
             Console.WriteLine("Examples:");
             Console.WriteLine("");
+            Console.WriteLine("  /org:fabrikam /pat:{value} /action:listemptytags /project:projectname");
             Console.WriteLine("  /org:fabrikam /pat:{value} /action:listallfields");
             Console.WriteLine("  /org:fabrikam /pat:{value} /action:allpicklists");
             Console.WriteLine("  /org:fabrikam /pat:{value} /action:picklistswithnofield");
             Console.WriteLine("  /org:fabrikam /pat:{value} /action:getfield /refname:System.Title");
+            Console.WriteLine("  /org:fabrikam /pat:{value} /action:listfieldsforprocess /process:Agile");
             Console.WriteLine("  /org:fabrikam /pat:{value} /action:listfieldsforprocess /process:Agile");
             Console.WriteLine("  /org:fabrikam /pat:{value} /action:clonewit /process:sourceprocess /witrefname:custom.ticket /targetprocess:targetprocess");
 
