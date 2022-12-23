@@ -1,24 +1,25 @@
-﻿using adoAdmin.Helper;
-using adoAdmin.Helper.ConsoleTable;
-using adoAdmin.Models;
-using adoAdmin.Repos;
-using adoAdmin.ViewModels;
-using Microsoft.TeamFoundation.Build.WebApi;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+
 using Microsoft.TeamFoundation.Core.WebApi;
 using Microsoft.TeamFoundation.WorkItemTracking.Process.WebApi.Models;
+using Microsoft.TeamFoundation.WorkItemTracking.WebApi;
 using Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models;
-using Microsoft.VisualStudio.Services.ActivityStatistic;
 using Microsoft.VisualStudio.Services.Common;
 using Microsoft.VisualStudio.Services.WebApi;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.Eventing.Reader;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Runtime.Remoting.Messaging;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
+using Microsoft.VisualStudio.Services.WebApi.Patch.Json;
+
+using adoAdmin.Helper;
+using adoAdmin.Helper.ConsoleTable;
+using adoAdmin.ViewModels;
+
+using Microsoft.VisualStudio.Services.WebApi.Patch;
+using Microsoft.VisualStudio.Services.TestManagement.TestPlanning.WebApi;
+using System.Net;
+using System.Xml.XPath;
+using WorkItem = Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models.WorkItem;
 
 namespace adoAdmin
 {
@@ -422,6 +423,55 @@ namespace adoAdmin
                     Console.WriteLine();
                 }
 
+                if (action == "uploadtest")
+                {
+                    string filePath = "C:\\Temp\\dan-128x.png";
+                                        
+                    WorkItemTrackingHttpClient client = vssConnection.GetClient<WorkItemTrackingHttpClient>();
+
+                    Console.WriteLine("Attempting upload of: {0}", @filePath);
+
+                    AttachmentReference attachment = client.CreateAttachmentAsync(@filePath).Result;
+
+                    JsonPatchDocument patchDocument = new JsonPatchDocument();
+
+                    patchDocument.Add(
+                       new JsonPatchOperation()
+                       {
+                           Operation = Operation.Test,
+                           Path = "/rev",
+                           Value = "8"
+                       }
+                    );
+
+                    patchDocument.Add(
+                        new JsonPatchOperation()
+                        {
+                            Operation = Operation.Add,
+                            Path = "/fields/System.History",
+                            Value = "Adding the necessary spec"
+                        }
+                    );
+
+                    patchDocument.Add(
+                        new JsonPatchOperation()
+                        {
+                            Operation = Operation.Add,
+                            Path = "/relations/-",
+                            Value = new
+                            {
+                                rel = "AttachedFile",
+                                url = attachment.Url,
+                                attributes = new { comment = "VanDelay Industries - Spec" }
+                            }
+                        }
+                    );
+
+                    WorkItem result = client.UpdateWorkItemAsync(patchDocument, Convert.ToInt32(17215)).Result;
+
+                    client = null;
+                }
+                               
                 vssConnection = null;
             }
             catch (ArgumentException ex)
