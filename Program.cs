@@ -423,7 +423,7 @@ namespace adoAdmin
                     Console.WriteLine();
                 }
 
-                if (action == "uploadtest")
+                if (action == "attachmenttest")
                 {
                     string filePath = "C:\\Temp\\dan-128x.png";
                                         
