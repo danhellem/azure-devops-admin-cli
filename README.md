@@ -33,7 +33,7 @@ picklistswithnofield    picklists that are not being used
 /org:{organization name} /pat:{value} /action:allpicklists
 /org:{organization name} /pat:{value} /action:picklistswithnofield
 /org:{organization name} /pat:{value} /action:listfieldsforprocess /process:Agile
-/org:{organization name}/pat:{value} /action:getfield /refname:System.Title
+/org:{organization name} /pat:{value} /action:getfield /refname:System.Title
 ```
 
 ## ♻️ Recyle bin
