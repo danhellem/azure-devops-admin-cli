@@ -42,11 +42,11 @@ picklistswithnofield    picklists that are not being used
 ### Examples
 
 ```
-/org:{organization name} /pat:{value} /action:listallfields
-/org:{organization name} /pat:{value} /action:allpicklists
-/org:{organization name} /pat:{value} /action:picklistswithnofield
-/org:{organization name} /pat:{value} /action:listfieldsforprocess /process:Agile
-/org:{organization name} /pat:{value} /action:getfield /refname:System.Title
+adoadmin.exe /org:{organization name} /pat:{value} /action:listallfields
+adoadmin.exe /org:{organization name} /pat:{value} /action:allpicklists
+adoadmin.exe /org:{organization name} /pat:{value} /action:picklistswithnofield
+adoadmin.exe /org:{organization name} /pat:{value} /action:listfieldsforprocess /process:Agile
+adoadmin.exe /org:{organization name} /pat:{value} /action:getfield /refname:System.Title
 ```
 
 ## ♻️ Recyle bin
@@ -54,19 +54,19 @@ picklistswithnofield    picklists that are not being used
 Used to delete work items forever out the recycle bin.
 
 ```
-/action:emptyrecyclebin /org:{organization name} /pat:{value} /project:{project name} /days:0
+adoadmin.exe /org:{organization name} /pat:{value} /action:emptyrecyclebin /project:{project name} /days:0
 ```
 
 ### Examples
 
 Empty everything from the recycle bin
 ```
-/action:emptyrecyclebin /org:{organization name} /pat:{value} /project:{project name} /days:0
+adoadmin.exe /org:{organization name} /pat:{value} /action:emptyrecyclebin /project:{project name} /days:0
 ```
 
 Empty work items that have not been updated in the last 365 days
 ```
-/org:{organization name} /pat:{value} /project:{project name} /days:365
+adoadmin.exe /org:{organization name} /pat:{value} /project:{project name} /days:365
 ```
 
 ## 🏷️ Tags 
@@ -74,5 +74,5 @@ Empty work items that have not been updated in the last 365 days
 Find all the tags that are not used and can be deleted.
 
 ```
-/action:listemptytags /org:{organization name} /pat:{value} /project:{project name}
+adoadmin.exe /org:{organization name} /pat:{value} /action:listemptytags /project:{project name}
 ```
