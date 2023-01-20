@@ -113,24 +113,65 @@ namespace adoAdmin
                     List<PickListMetadata> picklists = Repos.Process.ListPicklists(vssConnection);
 
                     Console.WriteLine("Done");
-                    Console.WriteLine(" ");
-                    Console.WriteLine(" These picklists are not being used by any fields");
-                  
+                                                         
                     var table = new ConsoleTable("Name", "Id", "Type");
 
+                    // look through all the picklists and lets see if they are attached to any fields
                     foreach (PickListMetadata item in picklists)
                     {
                         string fieldName = string.Empty;
                         var field = fields.Where(x => x.IsPicklist == true && x.PicklistId == item.Id);
                         
+                        // found one
                         if (field.Count() == 0)
                         {
                             table.AddRow(item.Name, item.Id, item.Type);
                         }                        
                     }
 
-                    table.Write();
+                    // check to see if we have any results
+                    if (table.Rows.Count == 0)
+                    {
+                        Console.WriteLine();
+                        Console.WriteLine(" No unused picklists found.");
+                        return 0;
+                    }
+
                     Console.WriteLine();
+                    Console.WriteLine(" These picklists are not being used by any fields:");
+
+                    table.Write();                 
+
+                    // if we have some results, do we want to delete the picklists?
+                    if (table.Rows.Count > 0)
+                    {
+                        Console.WriteLine();
+                        Console.WriteLine(" Would you like to delete these unused picklists?");
+                        Console.WriteLine();
+                        Console.WriteLine(" Press 'Y' continue or 'N' to abort.");
+
+                        // no i don't
+                        if (Console.ReadKey().Key == ConsoleKey.N)
+                        {
+                            Console.WriteLine(" Delete aborted!");
+                            return 0;
+                        }
+
+                        // yes i do
+                        if (Console.ReadKey().Key == ConsoleKey.Y)
+                        {
+                            Console.Write(" Deleting unused picklists: ");
+
+                            // loop throuh the table and delete a picklist one at a time
+                            foreach (IList<object> row in table.Rows)
+                            {
+                                Repos.Process.DeletePicklist(vssConnection, row[1].ToString());
+                            }
+
+                            Console.Write("Done");
+                            Console.WriteLine(" ");
+                        }                       
+                    }
 
                     return 0;
                 }

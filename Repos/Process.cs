@@ -118,5 +118,24 @@ namespace adoAdmin.Repos
                 return null;
             }
         }
+
+        public static Boolean DeletePicklist(VssConnection connection, string id)
+        {
+            WorkItemTrackingProcessHttpClient client = connection.GetClient<WorkItemTrackingProcessHttpClient>();
+
+            try
+            {
+                Guid listId = new Guid(id);
+
+                client.DeleteListAsync(listId).SyncResult();
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+
     }
 }
