@@ -11,7 +11,7 @@ CLI to manage work item admin tasks in Azure DevOps
  #### Example
  
  ```
- adoadmin.ext /org:myorgname /pat:1461fe40a1074619b1b29438ad19c71b /action:listallfields
+ adoadmin.exe /org:myorgname /pat:1461fe40a1074619b1b29438ad19c71b /action:listallfields
  ```
 
 ## Arguments
