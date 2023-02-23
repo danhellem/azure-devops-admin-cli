@@ -1,6 +1,19 @@
 # azure-devops-admin-cli
 CLI to manage work item admin tasks in Azure DevOps
 
+## Building and running
+
+ 1. Open solution in Visual Studio and build the project.
+ 2. Open bin > release folder (or debug) to find witadmin.exe
+ 3. Run command line ```adoadmin.exe```
+ 4. Add arguments below to run specific commands
+ 
+ #### Example
+ 
+ ```
+ adoadmin.exe /org:myorgname /pat:1461fe40a1074619b1b29438ad19c71b /action:listallfields
+ ```
+
 ## Arguments
 
 ```
@@ -29,11 +42,11 @@ picklistswithnofield    picklists that are not being used
 ### Examples
 
 ```
-/org:{organization name} /pat:{value} /action:listallfields
-/org:{organization name} /pat:{value} /action:allpicklists
-/org:{organization name} /pat:{value} /action:picklistswithnofield
-/org:{organization name} /pat:{value} /action:listfieldsforprocess /process:Agile
-/org:{organization name} /pat:{value} /action:getfield /refname:System.Title
+adoadmin.exe /org:{organization name} /pat:{value} /action:listallfields
+adoadmin.exe /org:{organization name} /pat:{value} /action:allpicklists
+adoadmin.exe /org:{organization name} /pat:{value} /action:picklistswithnofield
+adoadmin.exe /org:{organization name} /pat:{value} /action:listfieldsforprocess /process:Agile
+adoadmin.exe /org:{organization name} /pat:{value} /action:getfield /refname:System.Title
 ```
 
 ## ♻️ Recyle bin
@@ -41,19 +54,19 @@ picklistswithnofield    picklists that are not being used
 Used to delete work items forever out the recycle bin.
 
 ```
-/action:emptyrecyclebin /org:{organization name} /pat:{value} /project:{project name} /days:0
+adoadmin.exe /org:{organization name} /pat:{value} /action:emptyrecyclebin /project:{project name} /days:0
 ```
 
 ### Examples
 
 Empty everything from the recycle bin
 ```
-/action:emptyrecyclebin /org:{organization name} /pat:{value} /project:{project name} /days:0
+adoadmin.exe /org:{organization name} /pat:{value} /action:emptyrecyclebin /project:{project name} /days:0
 ```
 
 Empty work items that have not been updated in the last 365 days
 ```
-/org:{organization name} /pat:{value} /project:{project name} /days:365
+adoadmin.exe /org:{organization name} /pat:{value} /project:{project name} /days:365
 ```
 
 ## 🏷️ Tags 
@@ -61,5 +74,5 @@ Empty work items that have not been updated in the last 365 days
 Find all the tags that are not used and can be deleted.
 
 ```
-/action:listemptytags /org:{organization name} /pat:{value} /project:{project name}
+adoadmin.exe /org:{organization name} /pat:{value} /action:listemptytags /project:{project name}
 ```
