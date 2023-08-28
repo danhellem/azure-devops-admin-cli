@@ -16,6 +16,7 @@ using System.Net.Http;
 using System.Text;
 using System.Linq;
 using Microsoft.VisualStudio.Services.Organization.Client;
+using adoAdmin.Http;
 
 namespace adoAdmin.Repos
 {

@@ -1,24 +1,18 @@
 ﻿using adoAdmin.Helper;
 using adoAdmin.Helper.ConsoleTable;
 using adoAdmin.Models;
-using adoAdmin.Repos;
 using adoAdmin.ViewModels;
-using Microsoft.TeamFoundation.Build.WebApi;
+using adoAdmin.Http;
 using Microsoft.TeamFoundation.Core.WebApi;
+using Microsoft.TeamFoundation.Work.WebApi;
 using Microsoft.TeamFoundation.WorkItemTracking.Process.WebApi.Models;
 using Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models;
-using Microsoft.VisualStudio.Services.ActivityStatistic;
 using Microsoft.VisualStudio.Services.Common;
 using Microsoft.VisualStudio.Services.WebApi;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Eventing.Reader;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Runtime.Remoting.Messaging;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace adoAdmin
 {
@@ -463,6 +457,94 @@ namespace adoAdmin
                     Console.WriteLine();
                 }
 
+                if (action == "list-delete-plans")
+                {
+                    Console.Write(" Loading delivery plans: ");
+
+                    ConsoleKeyInfo cki;
+                    List<string> list = new List<string>();
+
+                    IGetPlansResponse response = Repos.DeliveryPlans.GetPlans(pat, org, project);
+                    List<Models.Plan> plans = response.Plans.value.OrderByDescending(x => x.lastAccessed).ToList();
+
+                    Console.Write("Done");
+                    Console.WriteLine("");
+
+                    var table = new ConsoleTable("Name", "Description", "Created", "Modified", "Last Accessed");
+
+                    foreach (Models.Plan plan in response.Plans.value)
+                    {
+                        if (plan.lastAccessed.HasValue && plan.lastAccessed.Value.AddDays(days) < DateTime.Today)
+                        {
+                            table.AddRow(plan.name, plan.description, plan.createdDate, plan.modifiedDate, plan.lastAccessed);
+                            list.Add(plan.id);
+                        }
+                    }
+
+                    if (table.Rows.Count == 0)
+                    {
+                        Console.WriteLine($" No delivery plans found that have not been accessed in the last {days} days.");
+                    }
+                    else
+                    {
+                        table.Write();
+
+                        Console.WriteLine();
+                        Console.Write($" Press <Delete> to delete these {list.Count} plans or press <Enter> to exit... ");
+                        Console.WriteLine();
+
+                        do
+                        {
+                            cki = Console.ReadKey();
+                            if (cki.Key == ConsoleKey.Delete)
+                            {
+                                Console.WriteLine("");
+                                Console.Write(" Deleting plans: ");
+                                Console.WriteLine("");
+
+                                foreach (string id in list)
+                                {
+                                    Console.Write($"  - {id}");
+                                    Repos.DeliveryPlans.DeletePlan(vssConnection, project, id);
+                                }
+
+                                Console.WriteLine("");
+                            }
+                        } while (cki.Key != ConsoleKey.Enter);
+
+                        Console.Write("Done");
+                    }
+
+                    table = null;
+                    response = null;
+                    plans = null;
+                    list = null;
+                }
+
+                if (action == "mylimits")
+                {
+                    var table = new ConsoleTable("Project limit", "Status", "Recommendation");
+
+                    if (!string.IsNullOrEmpty(project))
+                    {
+                        Console.Write("Loading usage data for project limits: ");
+
+                        List<WorkItemReference> workitems = Repos.RecycleBin.GetDeletedWorkItemsByWiql(vssConnection, project);
+                        
+                        table.AddRow("Recycle Bin", $"{workitems.Count} deleted work items", workitems.Count > 19000 ? $"Empty recycle bin" : $" - ").Write();
+
+                        workitems = null;
+
+                        Console.Write("Done");
+                        Console.WriteLine("");
+                    }
+
+                    table.Write();
+                    Console.WriteLine();                   
+
+                    return 0;
+                }
+
                 vssConnection = null;
             }
             catch (ArgumentException ex)
@@ -654,7 +736,7 @@ namespace adoAdmin
             if (action == "listemptytags" && string.IsNullOrEmpty(project))
             {
                 throw new ArgumentException("Missing required argument 'project'");
-            }
+            }           
         }        
 
         private static string[] SetArgumentsFromConfig (string[] args)
