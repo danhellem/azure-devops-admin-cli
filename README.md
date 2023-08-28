@@ -25,7 +25,7 @@ CLI to manage work item admin tasks in Azure DevOps
 /name:{value}           field friendly name
 /type:{value}           type field creating  
 
-/days:{value}           used with emptyrecyclebin action. Number of days in the past from today to destroy work items
+/days:{value}           used with emptyrecyclebin and list-delete-plans action. Number of days in the past from today
 ```
 
 ## 📃Process
@@ -37,6 +37,7 @@ addfield                add a field
 listfieldsforprocess    list of fields in a process
 allpicklists            list all picklists and the field they are associated to
 picklistswithnofield    picklists that are not being used
+list-delete-plans       list out and delete (optional) delivery plans that have not been accessed in x number of days
 ```
 
 ### Examples
@@ -47,6 +48,19 @@ adoadmin.exe /org:{organization name} /pat:{value} /action:allpicklists
 adoadmin.exe /org:{organization name} /pat:{value} /action:picklistswithnofield
 adoadmin.exe /org:{organization name} /pat:{value} /action:listfieldsforprocess /process:Agile
 adoadmin.exe /org:{organization name} /pat:{value} /action:getfield /refname:System.Title
+```
+
+## 📅 Delivery Plans
+
+Clean up Delivery Plans that have not been accessed over a number of days. This can be helpful when trying to stay under the 1,000 plan limit per project. We recommend deleting plans that have not had any activity in the last 3-6 months.
+
+```
+list-delete-plans       list out and delete (optional) delivery plans that have not been accessed in x number of days
+```
+
+### Example
+```
+adoadmin.exe /org:{organization name} /pat:{value} /action:list-delete-plans /days:182
 ```
 
 ## ♻️ Recyle bin
