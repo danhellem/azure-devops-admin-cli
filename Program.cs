@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 
+
 namespace adoAdmin
 {
     public class Program
@@ -454,6 +455,32 @@ namespace adoAdmin
 
                     if (table.Rows .Count > 0 ) { table.Write(); } else { Console.WriteLine(" No empty tags found"); }
                     
+                    Console.WriteLine();
+                }
+
+                // Delete a tag 
+                if (action == "deletetag")
+                {
+                    Console.Write("Deleting tag: ");
+
+                    try
+                    {
+                        Repos.Tags.DeleteTag(vssConnection, project, name);
+
+                        Console.WriteLine($"Tag: " + name + " deleted successfully.");
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine($"Failed to delete tag: " + name + ".");
+                        if ( e.InnerException is null )
+                        {
+                            Console.WriteLine(e.Message);
+                        }
+                        else
+                        {
+                            Console.WriteLine(e.InnerException.Message);
+                        }
+                    }
                     Console.WriteLine();
                 }
 

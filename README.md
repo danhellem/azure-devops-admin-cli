@@ -90,3 +90,8 @@ Find all the tags that are not used and can be deleted.
 ```
 adoadmin.exe /org:{organization name} /pat:{value} /action:listemptytags /project:{project name}
 ```
+
+Delete a specific tag in a project.
+```
+adoadmin.exe /org:{organization name} /pat:{value} /action:deletetag /project:{project name} /name:{tag name}
+```
