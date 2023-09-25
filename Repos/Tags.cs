@@ -43,6 +43,26 @@ namespace adoAdmin.Repos
 
             return wits.WorkItems.ToList();
         }
+        public static void DeleteTag(VssConnection connection, string project, string name)
+        {
+            WorkItemTrackingHttpClient workItemTrackingClient = connection.GetClient<WorkItemTrackingHttpClient>();
+             
+            List<WorkItemTagDefinition> tags = workItemTrackingClient.GetTagsAsync(project).Result;
+            
+            WorkItemTagDefinition specificTag = tags.FirstOrDefault(tag => tag.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+            //if the tag exists delete it
+            if (specificTag != null)
+            {
+                workItemTrackingClient.DeleteTagAsync(project, specificTag.Name).SyncResult();
+            }
+            //If the tag doesn't exist throw an error we can catch to make this case work the same as a TF error or other lower level issues.
+            else
+            {
+                throw new Exception("TagNotFound:  The following tag does not exist: " + name + ". Verify that the name of the project is correct and that the tag exists on the specified project.");
+            }
+
+        }
+
     }    
 }
 
