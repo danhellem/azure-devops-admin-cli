@@ -742,6 +742,11 @@ namespace adoAdmin
             {
                 throw new ArgumentException("Missing required argument 'days'");
             }
+
+            if (action == "list-delete-plans" && string.IsNullOrEmpty(project))
+            {
+                throw new ArgumentException("Missing required argument 'project'");
+            }
         }        
 
         private static string[] SetArgumentsFromConfig (string[] args)
