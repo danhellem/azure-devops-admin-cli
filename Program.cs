@@ -506,6 +506,14 @@ namespace adoAdmin
                             table.AddRow(plan.name, plan.description, plan.createdDate, plan.modifiedDate, plan.lastAccessed);
                             list.Add(plan.id);
                         }
+
+                        // get list of plans that have never been accessed
+                        // for those plans that existed before we added last accessed fields
+                        if (!plan.lastAccessed.HasValue)
+                        {
+                            table.AddRow(plan.name, plan.description, plan.createdDate, plan.modifiedDate, "Never");
+                            list.Add(plan.id);
+                        }
                     }
 
                     if (table.Rows.Count == 0)
