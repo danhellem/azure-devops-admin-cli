@@ -56,7 +56,7 @@ namespace adoAdmin
                 // action out all fields
                 if (action == "listallfields")
                 {
-                    var fields = Repos.Fields.GetAllFields(vssConnection);
+                    List<WorkItemField2> fields = Repos.Fields.GetAllFields(vssConnection);
 
                     var table = new ConsoleTable("Name", "Reference Name", "Type");
 
@@ -76,7 +76,7 @@ namespace adoAdmin
                 {
                     Console.Write("Loading all picklists and fields: ");
 
-                    List<WorkItemField> fields = Repos.Fields.GetAllFields(vssConnection);
+                    List<WorkItemField2> fields = Repos.Fields.GetAllFields(vssConnection);
                     List<PickListMetadata> picklists = Repos.Process.ListPicklists(vssConnection);
                    
                     Console.Write("Done");
@@ -104,7 +104,7 @@ namespace adoAdmin
                 {
                     Console.Write(" Loading all picklists and fields: ");
 
-                    List<WorkItemField> fields = Repos.Fields.GetAllFields(vssConnection);
+                    List<WorkItemField2> fields = Repos.Fields.GetAllFields(vssConnection);
                     List<PickListMetadata> picklists = Repos.Process.ListPicklists(vssConnection);
 
                     Console.WriteLine("Done");
@@ -330,6 +330,49 @@ namespace adoAdmin
                     return 0;
                 }
 
+                // get all fields that are not used by any work item type in any process and any project
+                if (action == "listunusedcustomfields")
+                {
+                    List<WorkItemField2> fields = Repos.Fields.GetAllFields(vssConnection, true);
+                    List<ProcessInfo> processList = Repos.Process.GetProcesses(vssConnection, true);
+                    List<ProcessWorkItemType> witList;
+
+                    var table = new ConsoleTable("Name", "Reference Name");
+                                        
+                    foreach (var processInfo in processList)
+                    {                                               
+                        Console.WriteLine($"Proces: {processInfo.Name}...");
+
+                        witList = Repos.Process.GetWorkItemTypes(vssConnection, processInfo.TypeId);
+                        
+                        foreach (var witItem in witList)
+                        {
+                            Console.WriteLine($"  {witItem.Name}");
+
+                            ProcessWorkItemTypeField witField = Repos.Process.GetField(vssConnection, processInfo.TypeId, witItem.ReferenceName, refname);
+
+                            //if (witField != null)
+                            //{
+                               
+                            //}
+
+                            //witField = null;
+                        }
+                    } 
+
+                    foreach (WorkItemField field in fields)
+                    {
+                        table.AddRow(field.Name, field.ReferenceName, field.Type);
+                    }
+
+                    table.Write();
+                    Console.WriteLine();
+
+                    return 0;
+
+
+                }
+
                 // action out all fields
                 if (action == "emptyrecyclebin")
                 {
@@ -464,14 +507,14 @@ namespace adoAdmin
                     Console.Write("Deleting tag: ");
 
                     try
-                    {
+                    {                        
                         Repos.Tags.DeleteTag(vssConnection, project, name);
 
-                        Console.WriteLine($"Tag: " + name + " deleted successfully.");
+                        Console.WriteLine($"Tag: '" + name + "' deleted successfully.");
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine($"Failed to delete tag: " + name + ".");
+                        Console.WriteLine($"Failed to delete tag: '" + name + "'.");
                         if ( e.InnerException is null )
                         {
                             Console.WriteLine(e.Message);
@@ -771,6 +814,19 @@ namespace adoAdmin
             if (action == "listemptytags" && string.IsNullOrEmpty(project))
             {
                 throw new ArgumentException("Missing required argument 'project'");
+            }
+
+            if (action == "deletetag")
+            {
+                if (string.IsNullOrEmpty(project))
+                {
+                    throw new ArgumentException("Missing required argument 'project'");
+                }
+
+               if (string.IsNullOrEmpty(name))
+                {
+                    throw new ArgumentException("Missing required argument 'name'");
+                }
             }
 
             if (action == "list-delete-plans" && days == 0)

@@ -16,13 +16,24 @@ namespace adoAdmin.Repos
     {   
         private readonly static string[] _fieldTypes = new string[] { "boolean", "dateTime", "double", "html", "identity", "integer", "pickactionDouble", "pickactionInteger", "pickactionString", "plainText", "string" };
 
-        public static List<WorkItemField> GetAllFields(VssConnection connection)
-        {            
+        public static List<WorkItemField2> GetAllFields(VssConnection connection)
+        {  
+            return GetAllFields(connection, false);
+        }
+
+        public static List<WorkItemField2> GetAllFields(VssConnection connection, bool ignoreSystem)
+        {
             WorkItemTrackingHttpClient workItemTrackingClient = connection.GetClient<WorkItemTrackingHttpClient>();
 
-            List<WorkItemField> fields = workItemTrackingClient.GetFieldsAsync().Result;
+            //List<WorkItemField> fields = workItemTrackingClient.GetFieldsAsync().Result;
+            List<WorkItemField2> list = workItemTrackingClient.GetWorkItemFieldsAsync().Result;
 
-            return fields;               
+            if (ignoreSystem)
+            {
+                list.RemoveAll(x => x.ReferenceName.Contains("System.") || x.ReferenceName.Contains("Microsoft."));
+            }           
+
+            return list;
         }
 
         public static List<WorkItemField> SearchFields(VssConnection connection, string name = null, string type = null)
