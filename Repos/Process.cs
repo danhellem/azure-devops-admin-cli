@@ -18,18 +18,28 @@ namespace adoAdmin.Repos
     {       
         public static List<ProcessInfo> GetProcesses(VssConnection connection)
         {
+            return GetProcesses(connection, false);
+        }
+
+        public static List<ProcessInfo> GetProcesses(VssConnection connection, bool ignoreSystem)
+        {
             WorkItemTrackingProcessHttpClient client = connection.GetClient<WorkItemTrackingProcessHttpClient>();
 
             try
             {
                 List<Microsoft.TeamFoundation.WorkItemTracking.Process.WebApi.Models.ProcessInfo> list = client.GetListOfProcessesAsync().Result;
-                
-                return list;            
+
+                if (ignoreSystem) 
+                {
+                    list.RemoveAll(x => x.Name == "CMMI" || x.Name == "Agile" || x.Name == "Scrum" || x.Name == "Basic");
+                }
+
+                return list;
             }
             catch (Exception)
             {
                 return null;
-            }          
+            }
         }
 
         public static List<ProcessWorkItemType> GetWorkItemTypes(VssConnection connection, System.Guid processId)
