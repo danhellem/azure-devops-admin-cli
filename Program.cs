@@ -14,7 +14,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 
-
 namespace adoAdmin
 {
     public class Program
@@ -44,6 +43,7 @@ namespace adoAdmin
                 VssCredentials clientCredentials = new VssCredentials(new VssBasicCredential("username", pat));
                 VssConnection vssConnection = new VssConnection(baseUri, clientCredentials);
 
+                // close work item type
                 if (action == "clonewit")                
                 {                   
                     Console.WriteLine("Start Validation...");
@@ -200,6 +200,7 @@ namespace adoAdmin
                     Console.WriteLine();                                      
                 }
 
+                // list of projects and work item types the field is used in
                 if (action == "getfieldforprojects" && (!String.IsNullOrEmpty(refname)))
                 {
                     Console.WriteLine("Getting list of projects and work item types...");
@@ -236,6 +237,7 @@ namespace adoAdmin
                     witList = null;
                 }
 
+                // search for a specific field by refname to see if it exists
                 if (action == "searchfields")
                 {
                     var fields = Repos.Fields.SearchFields(vssConnection, name, type);
@@ -308,6 +310,7 @@ namespace adoAdmin
                     }
                 }
 
+                // list of fields in a process
                 if (action == "listfieldsforprocess")
                 {
                     List<FieldsPerProcess> list = Repos.Fields.ListFieldsForProcess(vssConnection, process);
@@ -329,50 +332,7 @@ namespace adoAdmin
 
                     return 0;
                 }
-
-                // get all fields that are not used by any work item type in any process and any project
-                if (action == "listunusedcustomfields")
-                {
-                    List<WorkItemField2> fields = Repos.Fields.GetAllFields(vssConnection, true);
-                    List<ProcessInfo> processList = Repos.Process.GetProcesses(vssConnection, true);
-                    List<ProcessWorkItemType> witList;
-
-                    var table = new ConsoleTable("Name", "Reference Name");
-                                        
-                    foreach (var processInfo in processList)
-                    {                                               
-                        Console.WriteLine($"Proces: {processInfo.Name}...");
-
-                        witList = Repos.Process.GetWorkItemTypes(vssConnection, processInfo.TypeId);
-                        
-                        foreach (var witItem in witList)
-                        {
-                            Console.WriteLine($"  {witItem.Name}");
-
-                            ProcessWorkItemTypeField witField = Repos.Process.GetField(vssConnection, processInfo.TypeId, witItem.ReferenceName, refname);
-
-                            //if (witField != null)
-                            //{
                                
-                            //}
-
-                            //witField = null;
-                        }
-                    } 
-
-                    foreach (WorkItemField field in fields)
-                    {
-                        table.AddRow(field.Name, field.ReferenceName, field.Type);
-                    }
-
-                    table.Write();
-                    Console.WriteLine();
-
-                    return 0;
-
-
-                }
-
                 // action out all fields
                 if (action == "emptyrecyclebin")
                 {
